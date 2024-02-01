@@ -1,0 +1,7 @@
+# jspac
+*
+!lib/**
+!dist-cjs/**
+!dist-mjs/**
+!package.json
+!README.md

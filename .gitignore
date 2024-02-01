@@ -1,0 +1,4 @@
+# jspac
+node_modules
+dist-cjs
+dist-mjs

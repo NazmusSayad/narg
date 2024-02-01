@@ -1,0 +1,28 @@
+{
+  "devDependencies": {
+    "@types/node": "^20.11.10",
+    "jspac": "^1.0.0",
+    "typescript": "^5.3.3"
+  },
+  "name": "narg",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "jspac dev",
+    "build": "jspac build",
+    "run": "nodemon ./src/index.ts"
+  },
+  "main": "./dist-cjs/index.cjs",
+  "module": "./dist-mjs/index.mjs",
+  "exports": {
+    ".": {
+      "require": "./dist-cjs/index.cjs",
+      "import": "./dist-mjs/index.mjs",
+      "types": "./dist-mjs/index.d.mts"
+    }
+  },
+  "dependencies": {
+    "ansi-colors": "^4.1.3",
+    "cli-table3": "^0.6.3",
+    "picocolors": "^1.0.0"
+  }
+}

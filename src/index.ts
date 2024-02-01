@@ -1,6 +1,4 @@
-import './main'
-import './__lab'
-import NoArg from './main'
+import NoArg from './NoArg'
 import t from './schemaType/t'
 import currentModule from './currentModule'
 

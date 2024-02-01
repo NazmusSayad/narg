@@ -4,7 +4,7 @@ import {
   CheckUndefined,
   ExtractTypeOutput,
 } from './schemaType/type.t'
-import NoArg from './main'
+import NoArg from './NoArg'
 import { Prettify } from './utils'
 import { TypeCore } from './schemaType/index'
 import { MakeObjectOptional } from './util.t'

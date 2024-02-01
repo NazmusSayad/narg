@@ -1,7 +1,7 @@
 console.clear()
 
 import t from './schemaType/t'
-import NoArg from './main'
+import NoArg from './NoArg'
 
 const app = new NoArg(
   'app',

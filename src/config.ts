@@ -4,9 +4,10 @@ import {
   CheckUndefined,
   ExtractTypeOutput,
 } from './schemaType/type.t'
-import Program from './program'
+import NoArg from './main'
 import { Prettify } from './utils'
 import { TypeCore } from './schemaType/index'
+import { MakeObjectOptional } from './util.t'
 
 export type ArgumentConfig = {
   name: string
@@ -28,12 +29,13 @@ export type TypeConfig = {
 }
 
 export type Config = {
-  programs?: Record<string, Program<Lowercase<string>, Config>>
+  programs?: Record<string, NoArg<Lowercase<string>, Config>>
   options?: Record<string, TSchema>
   arguments?: ArgumentConfig[]
   listArgument?: ListArgumentConfig
   description?: string
   disableHelp?: boolean
+  disableEqualValue?: boolean
 }
 
 export type MixConfig<TFrom extends Config, TConfig extends Config> = Prettify<
@@ -74,13 +76,7 @@ type ExtractActionArgs<
     : [])
 ]
 
-type MakeObjectOptional<T> = {
-  [Key in keyof T as undefined extends T[Key] ? never : Key]: T[Key]
-} & {
-  [Key in keyof T as undefined extends T[Key] ? Key : never]?: T[Key]
-}
-
-type ExtractActionOptions<Options extends Config['options']> = Prettify<
+type ExtractActionOptions<Options extends Config['options']> =
   MakeObjectOptional<{
     -readonly [Key in keyof Options]:
       | ExtractTypeOutput<Options[Key]>
@@ -91,7 +87,6 @@ type ExtractActionOptions<Options extends Config['options']> = Prettify<
           'never'
         >
   }>
->
 
 export type Action<TConfig extends Config> = {
   (

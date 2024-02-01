@@ -1,4 +1,3 @@
-import { TypeConfig } from '../config'
 import {
   TypeArray,
   TypeTuple,
@@ -6,6 +5,7 @@ import {
   TypeNumber,
   TypeString,
 } from './index'
+import { TypeConfig } from '../config'
 
 export type TPrimitive =
   | TypeString<TypeConfig>

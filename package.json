@@ -1,15 +1,17 @@
 {
   "devDependencies": {
     "@types/node": "^20.11.10",
+    "@types/nodemon": "^1.19.6",
     "jspac": "^1.0.0",
+    "nodemon": "^3.0.3",
     "typescript": "^5.3.3"
   },
   "name": "noarg",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "dev": "jspac dev",
     "build": "jspac build",
-    "run": "nodemon ./src/index.ts"
+    "lab": "nodemon ./src/__lab.ts"
   },
   "main": "./dist-cjs/index.cjs",
   "module": "./dist-mjs/index.mjs",

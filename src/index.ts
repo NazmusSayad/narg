@@ -1,10 +1,13 @@
-#!/usr/bin/env node
-
-console.clear()
-
 import './main'
 import './__lab'
-import Program from './program'
+import NoArg from './main'
+import t from './schemaType/t'
+import currentModule from './currentModule'
 
-export { Program }
-export default Program
+export default NoArg
+export { NoArg, t, currentModule }
+
+export * from './lib/extra'
+export * from './schemaType/type.t'
+export * from './schemaType/index'
+export * from './schemaType/result'

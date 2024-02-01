@@ -119,4 +119,6 @@ const test = app.run([
   '\\--abc',
   '\\---abc',
   '---abc',
+
+  '-h',
 ])

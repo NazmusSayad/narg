@@ -433,7 +433,8 @@ export default class NoArg<
     })
 
     if (hasHelp && !this.config.disableHelp) {
-      return this.renderHelp()
+      this.renderHelp()
+      return process.exit(0)
     }
 
     const resultArguments = this.parseArguments(argsList)

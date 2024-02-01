@@ -101,7 +101,7 @@ const sampleArgs = [
 ]
 
 // app.run(sampleArgs)
-app.run([
+const test = app.run([
   'test',
 
   '--df',

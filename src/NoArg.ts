@@ -63,11 +63,11 @@ export default class NoArg<
 
   public run(args: string[] = process.argv.slice(2)) {
     try {
-      this.runCore(args)
+      return this.runCore(args)
     } catch (error) {
       if (error instanceof NoArgError) {
         console.error(colors.red('Error:'), `${error.message}`)
-        process.exit(1)
+        return process.exit(1)
       } else throw error
     }
   }
@@ -438,11 +438,11 @@ export default class NoArg<
 
     const resultArguments = this.parseArguments(argsList)
     const resultOptions = this.parseOptions(flagsList)
+    const output = [resultArguments, resultOptions, this.config] as Parameters<
+      Action<TConfig>
+    >
 
-    return this.action(
-      resultArguments as any,
-      resultOptions as any,
-      this.config
-    )
+    this.action(...output)
+    return output
   }
 }

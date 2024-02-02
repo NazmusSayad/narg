@@ -22,8 +22,6 @@ const app = new NoArg(
       { name: 'arg-3' },
     ],
 
-    disableEqualValue: true,
-
     listArgument: {
       name: 'args',
       type: t.boolean(),

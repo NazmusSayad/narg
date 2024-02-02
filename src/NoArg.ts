@@ -186,7 +186,7 @@ export default class NoArg<
 
   private parseOptions(args: string[]) {
     const output: Record<string, any> = {}
-    let currentOption: { raw: string; key: string } | undefined = undefined
+    let currentOption: { raw: string; key: string }
     const listQueue: string[] = []
 
     const getCurrentSchema = () => {
@@ -208,7 +208,7 @@ export default class NoArg<
       return schema
     }
 
-    const workForList = () => {
+    const compileList = () => {
       if (!currentOption) return
       const schema = getCurrentSchema()
 
@@ -244,7 +244,7 @@ export default class NoArg<
           throw new NoArgError(`Duplicate option ${colors.cyan(arg)} entered`)
         }
 
-        workForList()
+        compileList()
         currentOption = { raw: arg, key: newFlagName }
         continue
       }
@@ -276,7 +276,7 @@ export default class NoArg<
       output[currentOption!.key] = data
     }
 
-    workForList()
+    compileList()
 
     for (let name in this.config.options) {
       const schema = this.config.options[name]
@@ -442,8 +442,8 @@ export default class NoArg<
         console.log('  ', colors.red('✖   --option=value'))
       } else {
         console.log('  ', colors.black('Options with equal value is enabled'))
-        console.log('  ', colors.yellow('✔   --option value'))
-        console.log('  ', colors.yellow('✔   --option=value'))
+        console.log('  ', colors.green('✔   --option value'))
+        console.log('  ', colors.green('✔   --option=value'))
       }
 
       console.log('')

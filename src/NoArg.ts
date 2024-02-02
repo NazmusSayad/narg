@@ -47,6 +47,7 @@ export default class NoArg<
     const program = new NoArg<TNewName, TMixConfig>(
       name,
       {
+        disableEqualValue: this.config.disableEqualValue,
         ...config,
         options: {
           ...globalOptions,
@@ -73,7 +74,7 @@ export default class NoArg<
   }
 
   private parsePrograms([name, ...args]: string[]) {
-    this.config.programs ??= {}
+    if (!this.config.programs) return false
 
     if (Object.keys(this.config.programs).length === 0) return false
     const program = Object.getOwnPropertyDescriptor(this.config.programs, name)
@@ -86,15 +87,15 @@ export default class NoArg<
   private divideArguments(args: string[]) {
     const argList: string[] = []
     const optionList: string[] = []
-    let isOptionLevel = false
+    let isOptionReached = false
 
     for (let arg of args) {
       const result = getFlagInfo(arg)
-      if (!isOptionLevel && result.isOption) {
-        isOptionLevel = true
+      if (!isOptionReached && result.isOption) {
+        isOptionReached = true
       }
 
-      if (!isOptionLevel) {
+      if (!isOptionReached) {
         argList.push(arg)
         continue
       }
@@ -129,7 +130,7 @@ export default class NoArg<
       )
     }
 
-    const result = this.config.arguments.map((config, i) => {
+    const result = this.config.arguments.map((config) => {
       const input = duplicateArgs.shift()!
       if (!config.type) return input
       const [data, error] = config.type.parse(input)
@@ -298,6 +299,7 @@ export default class NoArg<
 
   private renderHelp() {
     {
+      console.log('')
       console.log(colors.whiteBright(this.name))
 
       if (this.config.description) {
@@ -337,7 +339,7 @@ export default class NoArg<
 
       console.log(
         [
-          programEntries?.length && colors.green('(command)'),
+          programEntries?.length ? colors.green('(command)') : '$',
           args && colors.red(args),
           listArg && colors.yellow(listArg),
           options && colors.blue(options),
@@ -365,7 +367,7 @@ export default class NoArg<
       console.log('')
     }
 
-    if (this.config.arguments) {
+    if (this.config.arguments?.length) {
       console.log(colors.dim('Arguments:'))
 
       const argumentData = this.config.arguments.map<
@@ -379,7 +381,7 @@ export default class NoArg<
         ]
       })
 
-      const table = CustomTable([2, 1, 5], ...argumentData)
+      const table = CustomTable([5, 3, 10], ...argumentData)
       console.log(table.toString())
       console.log('')
     }
@@ -387,36 +389,63 @@ export default class NoArg<
     if (this.config.options) {
       console.log(colors.dim('Options:'))
 
-      const optionData = Object.entries(this.config.options).map<
-        [CellValue, CellValue, CellValue]
-      >(([name, schema]) => {
-        const schemaConfig = schema.config
+      const optionData = Object.entries(this.config.options)
+        .sort(([, a], [, b]) => {
+          const isRequired = a.config.required
+          const hasDefault = 'default' in a.config
 
-        const aliasString = schemaConfig.aliases
-          ? `-${schemaConfig.aliases
-              .map((alias) => colors.cyan(alias))
-              .join('\n -')}`
-          : ''
+          if (isRequired && !hasDefault) {
+            return -2
+          }
 
-        const optionName =
-          '--' +
-          colors.blueBright(name) +
-          (aliasString ? '\n ' + aliasString : '')
+          if (isRequired && hasDefault) {
+            return -1
+          }
 
-        const optionType =
-          schemaConfig.required && !('default' in schema.config)
-            ? colors.red(schema.name)
-            : colors.yellow(schema.name)
+          return 1
+        })
+        .map<[CellValue, CellValue, CellValue]>(([name, schema]) => {
+          const aliasString = schema.config.aliases
+            ? `-${schema.config.aliases
+                .map((alias) => colors.cyan(alias))
+                .join('\n -')}`
+            : ''
 
-        return [
-          optionName,
-          optionType,
-          colors.dim(schemaConfig.description ?? '---'),
-        ]
-      })
+          const optionName =
+            '--' +
+            colors.blueBright(name) +
+            (aliasString ? '\n ' + aliasString : '')
 
-      const table = CustomTable([2, 1, 5], ...optionData)
+          const optionType = schema.config.required
+            ? colors.red(schema.name) +
+              colors.black('default' in schema.config ? '?' : '*')
+            : colors.yellow(schema.name) + colors.black('?')
+
+          return [
+            optionName,
+            optionType,
+            colors.dim(schema.config.description ?? '---'),
+          ]
+        })
+
+      const table = CustomTable([5, 3, 10], ...optionData)
       console.log(table.toString())
+      console.log('')
+    }
+
+    {
+      console.log(colors.bold(colors.green('📝 NOTE:')))
+
+      if (this.config.disableEqualValue) {
+        console.log('  ', colors.black('Options with equal value is disabled'))
+        console.log('  ', colors.green('✔   --option value'))
+        console.log('  ', colors.red('✖   --option=value'))
+      } else {
+        console.log('  ', colors.black('Options with equal value is enabled'))
+        console.log('  ', colors.yellow('✔   --option value'))
+        console.log('  ', colors.yellow('✔   --option=value'))
+      }
+
       console.log('')
     }
   }

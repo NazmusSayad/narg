@@ -25,14 +25,14 @@ export function CustomTable<const TWidths extends number[]>(
   const maxLength = Math.max(...items.map((item) => item.length))
   const totalWidth = widths.reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0
   const colWidths = widths.map((width) => {
-    return Math.floor((75 / totalWidth) * (width ?? 1))
+    return Math.floor((70 / totalWidth) * (width ?? 1))
   })
 
   const table = new Table!({
     chars: {
       'top-left': '╭',
-      'top-right': '╮',
       'bottom-left': '╰',
+      'top-right': '╮',
       'bottom-right': '╯',
     },
 

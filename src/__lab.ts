@@ -22,6 +22,8 @@ const app = new NoArg(
       { name: 'arg-3' },
     ],
 
+    disableEqualValue: true,
+
     listArgument: {
       name: 'args',
       type: t.boolean(),
@@ -53,12 +55,12 @@ app.create(
     programs: {},
 
     options: {
-      // bool: t.boolean().required(),
-      // number: t.number(),
-      // string: t.string().aliases('s'),
+      bool: t.boolean().required().default(false),
+      string: t.string().aliases('s', 'str'),
       abc: t.array(t.string()),
-      xyz: t.array(t.string()),
       df: t.string(),
+      xyz: t.array(t.string()),
+      number: t.number().required(),
     },
   },
   (args, options, config) => {
@@ -100,8 +102,12 @@ const sampleArgs = [
   // '--help',
 ]
 
+process.stdout.on('resize', () => {
+  console.log(process.stdout.columns)
+})
+
 // app.run(sampleArgs)
-const test = app.run([
+app.run([
   'test',
 
   '--df',

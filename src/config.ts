@@ -40,6 +40,10 @@ export type Config = {
 
 export type MixConfig<TFrom extends Config, TConfig extends Config> = Prettify<
   TConfig & {
+    disableEqualValue: TFrom['disableEqualValue'] extends boolean
+      ? TFrom['disableEqualValue']
+      : TConfig['disableEqualValue']
+
     options: MixOptions<TFrom['options'], TConfig['options']>
   }
 >

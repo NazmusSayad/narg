@@ -8,14 +8,14 @@ import {
 import { TypeConfig } from '../config'
 
 export type TPrimitive =
-  | TypeString<TypeConfig>
-  | TypeNumber<TypeConfig>
-  | TypeBoolean<TypeConfig>
+  | TypeString<TypeConfig & Record<string, unknown>>
+  | TypeNumber<TypeConfig & Record<string, unknown>>
+  | TypeBoolean<TypeConfig & Record<string, unknown>>
 
 export type TSchema =
   | TPrimitive
-  | TypeArray<TypeConfig & { schema: TPrimitive }>
-  | TypeTuple<TypeConfig & { schemas: TPrimitive[] }>
+  | TypeArray<TypeConfig & { schema: TPrimitive } & Record<string, unknown>>
+  | TypeTuple<TypeConfig & { schemas: TPrimitive[] } & Record<string, unknown>>
 
 export type InferTypeAndUpdate<T, TConfig> = T extends TypeString<infer Config>
   ? TypeString<TConfig extends Config ? TConfig : never>

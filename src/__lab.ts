@@ -10,10 +10,7 @@ const app = new NoArg(
     description: 'This is a test program',
 
     options: {
-      config: t
-        .string()
-        .required()
-        .aliases('c', 'cfg', 'configuration', 'conf'),
+      config: t.string().enum('abc'),
     },
 
     arguments: [

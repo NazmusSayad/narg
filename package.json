@@ -7,7 +7,7 @@
     "typescript": "^5.3.3"
   },
   "name": "noarg",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "scripts": {
     "dev": "jspac dev",
     "build": "jspac build",

@@ -36,6 +36,8 @@ export type Config = {
   description?: string
   disableHelp?: boolean
   disableEqualValue?: boolean
+  errorOnMultipleValue?: boolean
+  errorOnDuplicateOption?: boolean
 }
 
 export type MixConfig<TFrom extends Config, TConfig extends Config> = Prettify<
@@ -43,6 +45,12 @@ export type MixConfig<TFrom extends Config, TConfig extends Config> = Prettify<
     disableEqualValue: TFrom['disableEqualValue'] extends boolean
       ? TFrom['disableEqualValue']
       : TConfig['disableEqualValue']
+    errorOnMultipleValue: TFrom['errorOnMultipleValue'] extends boolean
+      ? TFrom['errorOnMultipleValue']
+      : TConfig['errorOnMultipleValue']
+    errorOnDuplicateOption: TFrom['errorOnDuplicateOption'] extends boolean
+      ? TFrom['errorOnDuplicateOption']
+      : TConfig['errorOnDuplicateOption']
 
     options: MixOptions<TFrom['options'], TConfig['options']>
   }

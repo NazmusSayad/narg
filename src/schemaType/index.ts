@@ -8,21 +8,6 @@ export class TypeCore<TConfig extends TypeConfig> {
   name = 'core'
   constructor(public config: TConfig) {}
 
-  parseWithDefault<SELF = typeof this>(
-    value?: string | string[]
-  ): ParsedResult<ExtractTypeOutput<SELF>, string> {
-    if (value === undefined) {
-      if (this.config.default !== undefined) {
-        return [this.config.default as any, null, true]
-      }
-
-      if (this.config.required) return [null, 'A value is required', false]
-      return ['' as any, null, true]
-    }
-
-    return this.parse(value)
-  }
-
   parse<SELF = typeof this>(
     value?: string | string[]
   ): ParsedResult<ExtractTypeOutput<SELF>, string> {
@@ -152,13 +137,6 @@ export class TypeString<
     this.config.toCase = toCase
     return this as any
   }
-
-  enum<TEnum extends [string, ...string[]], SELF = typeof this>(
-    ...enum_: TEnum
-  ): InferTypeAndUpdate<SELF, Prettify<TConfig & { enum: TEnum }>> {
-    this.config.enum = enum_
-    return this as any
-  }
 }
 
 export class TypeNumber<
@@ -208,13 +186,6 @@ export class TypeNumber<
     max: TMax
   ): InferTypeAndUpdate<SELF, Prettify<TConfig & { max: TMax }>> {
     this.config.max = max
-    return this as any
-  }
-
-  enum<TEnum extends [number, ...number[]], SELF = typeof this>(
-    ...enum_: TEnum
-  ): InferTypeAndUpdate<SELF, Prettify<TConfig & { enum: TEnum }>> {
-    this.config.enum = enum_
     return this as any
   }
 

@@ -3,6 +3,7 @@ import { getFlagInfo } from './utils'
 import { CellValue } from 'cli-table3'
 import { NoArgError } from './lib/extra'
 import { CustomTable } from './lib/table'
+import { TSchema } from './schemaType/type.t'
 import { Action, Config, MixConfig } from './config'
 import { TypeBoolean, TypeArray, TypeTuple } from './schemaType/index'
 
@@ -48,6 +49,7 @@ export default class NoArg<
       name,
       {
         disableEqualValue: this.config.disableEqualValue,
+        errorOnDuplicateOption: this.config.errorOnDuplicateOption,
         ...config,
         options: {
           ...globalOptions,
@@ -62,21 +64,10 @@ export default class NoArg<
     return program
   }
 
-  public run(args: string[] = process.argv.slice(2)) {
-    try {
-      return this.runCore(args)
-    } catch (error) {
-      if (error instanceof NoArgError) {
-        console.error(colors.red('Error:'), `${error.message}`)
-        return process.exit(1)
-      } else throw error
-    }
-  }
-
   private parsePrograms([name, ...args]: string[]) {
     if (!this.config.programs) return false
-
     if (Object.keys(this.config.programs).length === 0) return false
+
     const program = Object.getOwnPropertyDescriptor(this.config.programs, name)
     if (!program) return false
 
@@ -85,13 +76,14 @@ export default class NoArg<
   }
 
   private divideArguments(args: string[]) {
-    const argList: string[] = []
-    const optionList: string[] = []
     let isOptionReached = false
+    const argList: string[] = []
+    const options: ReturnType<typeof getFlagInfo>[] = []
 
     for (let arg of args) {
       const result = getFlagInfo(arg)
-      if (!isOptionReached && result.isOption) {
+
+      if (result.optionType && !isOptionReached) {
         isOptionReached = true
       }
 
@@ -100,14 +92,10 @@ export default class NoArg<
         continue
       }
 
-      if (!this.config.disableEqualValue && result.hasValue) {
-        optionList.push(...result.splitted)
-      } else {
-        optionList.push(arg)
-      }
+      options.push(result)
     }
 
-    return [argList, optionList]
+    return [argList, options] as const
   }
 
   private parseArguments(args: string[]) {
@@ -167,136 +155,172 @@ export default class NoArg<
     return [...result, ...listResult]
   }
 
-  private parseArgForFlag(arg: string) {
-    const { isFlag, isAlias } = getFlagInfo(arg)
-
-    if (isFlag) return arg.slice(2)
-    if (isAlias) {
-      const name = arg.slice(1)
-      if (!this.config.options) return null
-
-      for (let key in this.config.options) {
-        if (this.config.options[key].config.aliases?.includes(name)) return key
-      }
-
-      return null
+  private findOptionSchema(record: ReturnType<typeof getFlagInfo>) {
+    if (record.optionType === 'flag') {
+      const schema = this.config.options?.[record.key!]
+      if (schema) return [record.key!, schema] as const
     }
+
+    if (record.optionType === 'alias') {
+      const found = Object.entries(this.config.options ?? {}).find(
+        ([, schema]) => {
+          return schema.config.aliases?.includes(record.key!)
+        }
+      )
+
+      if (found) return found
+    }
+
+    throw new NoArgError(`Unknown option ${colors.red(record.raw)} entered`)
   }
 
-  private parseOptions(args: string[]) {
+  private parseOptionsInner([record, ...records]: ReturnType<
+    typeof getFlagInfo
+  >[]) {
+    if (!record && records.length === 0) return {}
+
+    const self = this
+    if (!record?.optionType) {
+      throw new NoArgError(
+        `Something went wrong, received ${colors.yellow(record.raw)}`
+      )
+    }
+
+    let currentOptionKey: string = record.raw
+    const output: Record<
+      string,
+      {
+        schema: TSchema
+        optionType: Exclude<ReturnType<typeof getFlagInfo>['optionType'], null>
+        values: string[]
+        raw: string
+      }
+    > = {}
+
+    function checkRecord(record: ReturnType<typeof getFlagInfo>) {
+      if (record.optionType) {
+        const [key, schema] = self.findOptionSchema(record)
+        currentOptionKey = key
+
+        if (output[currentOptionKey]) {
+          if (self.config.errorOnDuplicateOption) {
+            throw new NoArgError(
+              `Duplicate option ${colors.cyan(record.raw!)} entered`
+            )
+          }
+        }
+
+        return (output[currentOptionKey] = {
+          schema,
+          optionType: record.optionType,
+          values: record.value !== null ? [record.value] : [],
+          raw: record.raw,
+        })
+      }
+
+      output[currentOptionKey].values.push(record.raw)
+    }
+
+    checkRecord(record)
+    records.forEach(checkRecord)
+    return output
+  }
+
+  private parseOptions(records: ReturnType<typeof getFlagInfo>[]): any {
+    const options = this.parseOptionsInner(records)
     const output: Record<string, any> = {}
-    let currentOption: { raw: string; key: string }
-    const listQueue: string[] = []
 
-    const getCurrentSchema = () => {
-      const schema =
-        currentOption &&
-        this.config.options &&
-        this.config.options[currentOption.key]
-
-      if (!schema) {
-        if (currentOption) {
-          throw new NoArgError(
-            `Unknown option ${colors.yellow(currentOption.raw)}`
-          )
-        }
-
-        throw new Error('Something went wrong!, currentOption is falsy')
-      }
-
-      return schema
-    }
-
-    const compileList = () => {
-      if (!currentOption) return
-      const schema = getCurrentSchema()
-
-      if (schema instanceof TypeArray || schema instanceof TypeTuple) {
-        const [data, error, ok] = schema.parseWithDefault(listQueue)
-        if (!ok) {
-          throw new NoArgError(
-            `${error} for option: ${colors.cyan(currentOption.raw)}`
-          )
-        }
-
-        output[currentOption.key] = data
-        listQueue.length = 0
-      }
-
-      if (currentOption && output[currentOption.key] === undefined) {
-        if (schema instanceof TypeBoolean) {
-          output[currentOption.key] = true
-          return
+    Object.entries(options).forEach(([key, value]) => {
+      if (value.values.length === 0) {
+        if (value.schema instanceof TypeBoolean) {
+          return (output[key] = true)
         }
 
         throw new NoArgError(
-          `No value given for option: ${colors.red(currentOption.raw)}`
-        )
-      }
-    }
-
-    for (let arg of args) {
-      const newFlagName = this.parseArgForFlag(arg)
-
-      if (newFlagName) {
-        if (newFlagName in output || currentOption!?.key === newFlagName) {
-          throw new NoArgError(`Duplicate option ${colors.cyan(arg)} entered`)
-        }
-
-        compileList()
-        currentOption = { raw: arg, key: newFlagName }
-        continue
-      }
-
-      const schema = getCurrentSchema()
-
-      const isEscapeArg = /^(\\+)--?[^-]/.test(arg)
-      if (isEscapeArg) {
-        arg = arg.slice(1)
-      }
-
-      if (schema instanceof TypeArray || schema instanceof TypeTuple) {
-        listQueue.push(arg)
-        continue
-      }
-
-      const [data, error, ok] = schema.parseWithDefault(arg)
-      if (!ok)
-        throw new NoArgError(`${error} for: ${colors.cyan(currentOption!.raw)}`)
-
-      if (currentOption!.key in output) {
-        throw new NoArgError(
-          `Duplicate value ${colors.green(arg)} for option ${colors.cyan(
-            currentOption!.raw
-          )}`
+          `No value given for option: ${colors.red(value.raw)}`
         )
       }
 
-      output[currentOption!.key] = data
-    }
+      const isList =
+        value.schema instanceof TypeArray || value.schema instanceof TypeTuple
 
-    compileList()
-
-    for (let name in this.config.options) {
-      const schema = this.config.options[name]
-      const canBeUsed = schema.config.required || schema.config.default
-      if (canBeUsed && output[name] === undefined) {
-        const [data, _, ok] = schema.parseWithDefault()
-
-        if (!ok) {
+      if (!isList && value.values.length > 1) {
+        if (this.config.errorOnMultipleValue) {
           throw new NoArgError(
-            `Required option --${colors.red(name)} not given`
+            `Multiple value entered [${value.values
+              .map(colors.green)
+              .join(', ')}] for option ${colors.cyan(value.raw)}`
           )
         }
 
-        output[name] = data
+        value.values = value.values.slice(-1)
       }
-    }
+
+      const [data, error, ok] = value.schema.parse(
+        isList ? value.values : value.values[0]
+      )
+
+      if (!ok) {
+        throw new NoArgError(`${error} for option: ${colors.cyan(value.raw)}`)
+      }
+
+      output[key] = data
+    })
+
+    Object.entries(this.config.options ?? {}).forEach(([key, schema]) => {
+      const isExist = key in output
+      const isRequired = schema.config.required
+      const hasDefault = 'default' in schema.config
+
+      if (!isExist) {
+        if (hasDefault) {
+          return (output[key] = schema.config.default)
+        }
+
+        if (isRequired) {
+          throw new NoArgError(`Option ${colors.cyan('--' + key)} is required`)
+        }
+      }
+    })
 
     return output
   }
 
-  private renderHelp() {
+  private runCore(args: string[]) {
+    if (this.parsePrograms(args)) return
+
+    const hasHelp = args.find((arg) => {
+      return arg === '--help' || arg === '-h'
+    })
+
+    if (hasHelp && !this.config.disableHelp) {
+      this.renderHelp()
+      return process.exit(0)
+    }
+
+    const [argsList, optionsRecord] = this.divideArguments(args)
+    const resultArguments = this.parseArguments(argsList)
+    const resultOptions = this.parseOptions(optionsRecord)
+    const output = [resultArguments, resultOptions, this.config] as Parameters<
+      Action<TConfig>
+    >
+
+    this.action(...output)
+    return output
+  }
+
+  public run(args: string[] = process.argv.slice(2)) {
+    try {
+      return this.runCore(args)
+    } catch (error) {
+      if (error instanceof NoArgError) {
+        console.error(colors.red('Error:'), `${error.message}`)
+        return process.exit(1)
+      } else throw error
+    }
+  }
+
+  public renderHelp() {
     {
       console.log('')
       console.log(colors.whiteBright(this.name))
@@ -447,31 +471,5 @@ export default class NoArg<
 
       console.log('')
     }
-  }
-
-  private runCore(args: string[]) {
-    const [argsList, flagsList] = this.divideArguments(args)
-    if (this.parsePrograms([...argsList, ...flagsList])) return
-
-    const hasHelp = args.find((arg) => {
-      const info = getFlagInfo(arg)
-      return (
-        info.isOption && (info.name.match('-h') || info.name.match('--help'))
-      )
-    })
-
-    if (hasHelp && !this.config.disableHelp) {
-      this.renderHelp()
-      return process.exit(0)
-    }
-
-    const resultArguments = this.parseArguments(argsList)
-    const resultOptions = this.parseOptions(flagsList)
-    const output = [resultArguments, resultOptions, this.config] as Parameters<
-      Action<TConfig>
-    >
-
-    this.action(...output)
-    return output
   }
 }

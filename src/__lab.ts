@@ -10,7 +10,7 @@ const app = new NoArg(
     description: 'This is a test program',
 
     options: {
-      config: t.string().enum('abc'),
+      config: t.string('abc'),
     },
 
     arguments: [
@@ -25,6 +25,8 @@ const app = new NoArg(
       minLength: 1,
       maxLength: 3,
     },
+
+    errorOnDuplicateOption: true,
   },
 
   (args, options, config) => {
@@ -39,11 +41,7 @@ app.create(
     options: {
       root: t.string().default('.').aliases('r').description('Root directory'),
 
-      module: t
-        .string()
-        .enum('cjs', 'mjs')
-        .aliases('m')
-        .description("Output module's type"),
+      module: t.string('cjs').aliases('m').description("Output module's type"),
 
       outDir: t
         .string()
@@ -57,17 +55,49 @@ app.create(
         .default([])
         .description("TypeScript's options"),
 
+      numbers: t.array(t.number()),
       node: t
         .boolean()
         .aliases('n')
         .default(false)
         .description('Enable __dirname and __filename in ES modules'),
+
+      test: t
+        .boolean()
+        .aliases('t')
+        .description('Test')
+        .required()
+        .default(true),
     },
   },
 
-  (_, options) => {
+  (_, options, config) => {
     console.log({ options })
   }
 )
 
-app.run(['build', '--root', '../npmize-test', '-n'])
+app.run([
+  'build',
+
+  '--root',
+  'npmize-test',
+
+  '--node',
+  // '-n',
+  'NO',
+  // 'false',
+
+  '-t',
+  'strict',
+  'noEmit',
+
+  '-o',
+  'dist',
+
+  '-m',
+  'cjs',
+
+  '--numbers=0001',
+  '1',
+  '10',
+])

@@ -4,23 +4,27 @@ export type Prettify<T extends object> = {
 
 const aliasRegexp = /^(\-)([^\-])/
 const flagRegexp = /^(\-\-)([^\-])/
-const optionWithValueRegexp = /^(\-\-?)([^\-]+)\=(?<value>.+)/
+const optionWithValueRegexp = /^(?<key>[^\=]+)\=(?<value>.+)/
 
-export function getFlagInfo(str: string) {
-  const isFlag = flagRegexp.test(str)
-  const isAlias = aliasRegexp.test(str)
-  const isOption = isAlias || isFlag
-  const hasValue = isOption && optionWithValueRegexp.test(str)
-  const [name, ...value] = str?.split('=') ?? []
+export function getFlagInfo(arg: string) {
+  const isFlag = flagRegexp.test(arg)
+  const isAlias = aliasRegexp.test(arg)
+  const optionType = isFlag
+    ? ('flag' as const)
+    : isAlias
+    ? ('alias' as const)
+    : null
+
+  const key = isFlag ? arg.slice(2) : isAlias ? arg.slice(1) : null
+  const hasValue = key && optionWithValueRegexp.test(key)
+  const value = hasValue
+    ? arg.match(optionWithValueRegexp)?.groups?.value ?? null
+    : null
 
   return {
-    isFlag,
-    isAlias,
-    isOption,
-    hasValue,
-
-    name,
-    value: value.join('='),
-    splitted: [name, value.join('=')],
+    raw: arg,
+    optionType,
+    value,
+    key: hasValue ? key.match(optionWithValueRegexp)?.groups?.key ?? null : key,
   }
 }

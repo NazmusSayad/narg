@@ -176,8 +176,7 @@ export default class NoArg<
       if (!this.config.options) return null
 
       for (let key in this.config.options) {
-        const found = this.config.options[key].config.aliases?.includes(name)
-        if (found) return this.config.options[key].name
+        if (this.config.options[key].config.aliases?.includes(name)) return key
       }
 
       return null

@@ -33,93 +33,41 @@ const app = new NoArg(
 )
 
 app.create(
-  'test',
+  'build',
   {
-    description: 'This is a test program',
-
-    arguments: [
-      // { name: 'arg-1', type: t.number() },
-      // { name: 'arg-2', type: t.boolean() },
-    ],
-
-    // listArgument: {
-    //   name: 'args',
-    //   type: t.number(),
-    // },
-
-    programs: {},
-
+    description: 'Build the package for production',
     options: {
-      bool: t.boolean().required().default(false),
-      string: t.string().aliases('s', 'str'),
-      abc: t.array(t.string()),
-      df: t.string(),
-      xyz: t.array(t.string()),
-      number: t.number().required(),
+      root: t.string().default('.').aliases('r').description('Root directory'),
+
+      module: t
+        .string()
+        .enum('cjs', 'mjs')
+        .aliases('m')
+        .description("Output module's type"),
+
+      outDir: t
+        .string()
+        .default('./dist')
+        .aliases('o')
+        .description('Output directory'),
+
+      tsc: t
+        .array(t.string())
+        .aliases('t')
+        .default([])
+        .description("TypeScript's options"),
+
+      node: t
+        .boolean()
+        .aliases('n')
+        .default(false)
+        .description('Enable __dirname and __filename in ES modules'),
     },
   },
-  (args, options, config) => {
-    console.log('\n')
-    console.log({ args, options })
+
+  (_, options) => {
+    console.log({ options })
   }
 )
 
-const sampleArgs = [
-  'test',
-
-  '4',
-  'true',
-
-  '1',
-  '3',
-  '9',
-  '11',
-
-  '--bool',
-
-  '--number=113355',
-  // '--number',
-  // '113355',
-  '-s',
-  'STRING',
-  '--list',
-  '1',
-  '3',
-  '9',
-  '9',
-  '9',
-  '9',
-
-  '--config',
-  '\\--config',
-
-  // '-h',
-  // '--help',
-]
-
-process.stdout.on('resize', () => {
-  console.log(process.stdout.columns)
-})
-
-// app.run(sampleArgs)
-app.run([
-  'test',
-
-  '--df',
-
-  '--abc',
-
-  '\\-c',
-  '\\--c',
-  '\\---c',
-  '---c',
-
-  '--xyz',
-
-  '\\-abc',
-  '\\--abc',
-  '\\---abc',
-  '---abc',
-
-  '-h',
-])
+app.run(['build', '--root', '../npmize-test', '-n'])

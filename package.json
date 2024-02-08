@@ -3,7 +3,7 @@
     "@types/node": "^20.11.10",
     "@types/nodemon": "^1.19.6",
     "nodemon": "^3.0.3",
-    "npmize": "^0.0.7",
+    "npmize": "^0.0.8",
     "typescript": "^5.3.3"
   },
   "name": "noarg",

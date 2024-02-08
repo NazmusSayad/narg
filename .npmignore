@@ -1,7 +1,6 @@
-# jspac
+# npmize
 *
 !lib/**
-!dist-cjs/**
-!dist-mjs/**
+!dist/**
 !package.json
 !README.md

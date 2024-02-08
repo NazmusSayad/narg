@@ -1,4 +1,4 @@
-# jspac
+# npmize
 node_modules
-dist-cjs
-dist-mjs
+dist
+.npmize

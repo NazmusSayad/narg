@@ -2,24 +2,23 @@
   "devDependencies": {
     "@types/node": "^20.11.10",
     "@types/nodemon": "^1.19.6",
-    "jspac": "^1.0.0",
     "nodemon": "^3.0.3",
+    "npmize": "^0.0.7",
     "typescript": "^5.3.3"
   },
   "name": "noarg",
-  "version": "0.0.11",
+  "version": "0.0.8",
   "scripts": {
-    "dev": "jspac dev",
-    "build": "jspac build",
+    "dev": "npmize dev",
+    "build": "npmize build",
     "lab": "nodemon ./src/__lab.ts"
   },
-  "main": "./dist-cjs/index.cjs",
-  "module": "./dist-mjs/index.mjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
   "exports": {
     ".": {
-      "require": "./dist-cjs/index.cjs",
-      "import": "./dist-mjs/index.mjs",
-      "types": "./dist-mjs/index.d.mts"
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs"
     }
   },
   "dependencies": {

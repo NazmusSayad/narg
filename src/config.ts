@@ -28,37 +28,39 @@ export type TypeConfig = {
   default?: any
 }
 
-export type Config = {
-  programs?: Record<string, NoArg<Lowercase<string>, Config>>
+export type NoArgOptions = {
+  name: string
+  programs?: Record<string, NoArg<NoArgOptions>>
   options?: Record<string, TSchema>
   arguments?: ArgumentConfig[]
   listArgument?: ListArgumentConfig
   description?: string
-  disableHelp?: boolean
-  disableEqualValue?: boolean
-  errorOnMultipleValue?: boolean
-  errorOnDuplicateOption?: boolean
 }
 
-export type MixConfig<TFrom extends Config, TConfig extends Config> = Prettify<
-  TConfig & {
-    disableEqualValue: TFrom['disableEqualValue'] extends boolean
-      ? TFrom['disableEqualValue']
-      : TConfig['disableEqualValue']
-    errorOnMultipleValue: TFrom['errorOnMultipleValue'] extends boolean
-      ? TFrom['errorOnMultipleValue']
-      : TConfig['errorOnMultipleValue']
-    errorOnDuplicateOption: TFrom['errorOnDuplicateOption'] extends boolean
-      ? TFrom['errorOnDuplicateOption']
-      : TConfig['errorOnDuplicateOption']
+export type NoArgConfig = Partial<
+  typeof defaultNoArgConfig & { parent: NoArg<NoArgOptions> }
+>
 
-    options: MixOptions<TFrom['options'], TConfig['options']>
-  }
+export const defaultNoArgConfig = {
+  disableHelp: false,
+  disableEqualValue: false,
+  errorOnMultipleValue: false,
+  errorOnDuplicateOption: false,
+}
+
+export type MixConfig<
+  TFrom extends NoArgOptions,
+  TConfig extends NoArgOptions
+> = Prettify<
+  { options: MixOptions<TFrom['options'], TConfig['options']> } & Omit<
+    TConfig,
+    'options'
+  >
 >
 
 export type MixOptions<
-  PrevOptions extends Config['options'],
-  NewOptions extends Config['options']
+  PrevOptions extends NoArgOptions['options'],
+  NewOptions extends NoArgOptions['options']
 > = Prettify<
   {
     [Key in keyof PrevOptions as PrevOptions[Key] extends TypeCore<infer Config>
@@ -88,7 +90,7 @@ type ExtractActionArgs<
     : [])
 ]
 
-type ExtractActionOptions<Options extends Config['options']> =
+type ExtractActionOptions<Options extends NoArgOptions['options']> =
   MakeObjectOptional<{
     -readonly [Key in keyof Options]:
       | ExtractTypeOutput<Options[Key]>
@@ -100,7 +102,9 @@ type ExtractActionOptions<Options extends Config['options']> =
         >
   }>
 
-export type Action<TConfig extends Config> = {
+export type Action<
+  TConfig extends Pick<NoArgOptions, 'arguments' | 'options' | 'listArgument'>
+> = {
   (
     args: ExtractActionArgs<
       undefined extends TConfig['arguments']
@@ -109,8 +113,6 @@ export type Action<TConfig extends Config> = {
       TConfig['listArgument']
     >,
 
-    options: ExtractActionOptions<TConfig['options']>,
-
-    config: TConfig
+    options: ExtractActionOptions<TConfig['options']>
   ): void
 }

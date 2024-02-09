@@ -3,14 +3,14 @@ console.clear()
 import t from './schemaType/t'
 import NoArg from './NoArg'
 
-const app = new NoArg(
+const app = NoArg.create(
   'app',
 
   {
     description: 'This is a test program',
 
     options: {
-      config: t.string('abc'),
+      config: t.string('abc').global().default('abc'),
     },
 
     arguments: [
@@ -26,16 +26,15 @@ const app = new NoArg(
       maxLength: 3,
     },
 
-    // errorOnMultipleValues: true,
-    errorOnDuplicateOption: true,
+    config: {},
   },
 
-  (args, options, config) => {
+  (args, options) => {
     console.log({ app: args })
   }
 )
 
-app.create(
+const build = app.create(
   'build',
   {
     description: 'Build the package for production',
@@ -72,36 +71,38 @@ app.create(
     },
   },
 
-  (_, options, config) => {
+  (_, options) => {
     console.log({ options })
   }
 )
 
-app.run([
-  'build',
+const deep = build.create('test', {}, (args, options) => {})
 
-  '-h',
-  '-u',
+// build.renderHelp()
+deep.renderHelp()
 
-  '--root',
-  'npmize-test',
+// app.run([
+//   'build',
 
-  '--node',
-  // '-n',
-  'NO',
-  // 'false',
+//   '--root',
+//   'npmize-test',
 
-  '-t',
-  'strict',
-  'noEmit',
+//   '--node',
+//   // '-n',
+//   'NO',
+//   // 'false',
 
-  '-o',
-  'dist',
+//   '-t',
+//   'strict',
+//   'noEmit',
 
-  '-m',
-  'cjs',
+//   '-o',
+//   'dist',
 
-  '--numbers=0001',
-  '1',
-  '10',
-])
+//   '-m',
+//   'cjs',
+
+//   '--numbers=0001',
+//   '1',
+//   '10',
+// ])

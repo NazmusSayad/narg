@@ -1,23 +1,46 @@
+import {
+  Action,
+  MixConfig,
+  NoArgConfig,
+  NoArgOptions,
+  defaultNoArgConfig,
+} from './config'
 import colors from './lib/colors'
 import { getFlagInfo } from './utils'
 import { CellValue } from 'cli-table3'
 import { NoArgError } from './lib/extra'
 import { CustomTable } from './lib/table'
 import { TSchema } from './schemaType/type.t'
-import { Action, Config, MixConfig } from './config'
 import { TypeBoolean, TypeArray, TypeTuple } from './schemaType/index'
 
-export default class NoArg<
-  TName extends Lowercase<string>,
-  const TConfig extends Config
-> {
+const NoArgConstructorSymbol = Symbol('NoArgConstructor')
+export default class NoArg<TConfig extends NoArgOptions> {
+  private options
+  private action
+  private config
+
   constructor(
-    public name: TName,
-    public config: TConfig,
-    public action: Action<TConfig>
+    symbol: typeof NoArgConstructorSymbol,
+    options: TConfig,
+    action: Action<TConfig>,
+    config: NoArgConfig
   ) {
-    if (config.options) {
-      for (let name in config.options) {
+    if (symbol !== NoArgConstructorSymbol) {
+      throw new Error('NoArg cannot be instantiated directly')
+    }
+
+    this.action = action
+    this.options = {
+      ...options,
+    }
+
+    this.config = {
+      ...defaultNoArgConfig,
+      ...config,
+    }
+
+    if (options.options) {
+      for (let name in options.options) {
         if (name.length == 0) {
           throw new Error(`Option name cannot be empty`)
         }
@@ -29,49 +52,65 @@ export default class NoArg<
     }
   }
 
+  static create<
+    TNewName extends Lowercase<string>,
+    const TNewConfig extends Omit<NoArgOptions, 'name'> & {
+      config?: NoArgConfig
+    }
+  >(name: TNewName, config: TNewConfig, action: Action<TNewConfig>) {
+    return new NoArg(
+      NoArgConstructorSymbol,
+      { name, ...config },
+      action as any,
+      config.config ?? {}
+    )
+  }
+
   public create<
     TNewName extends Lowercase<string>,
-    const TNewConfig extends Config
+    const TNewConfig extends Omit<NoArgOptions, 'name'>
   >(
     name: TNewName,
-    config: TNewConfig,
-    action: Action<MixConfig<TConfig, TNewConfig>>
+    options: TNewConfig,
+    action: Action<
+      MixConfig<typeof this.options, { name: TNewName } & TNewConfig>
+    >
   ) {
-    type TMixConfig = MixConfig<TConfig, TNewConfig>
-
     const globalOptions = Object.fromEntries(
-      Object.entries(this.config.options ?? {}).filter(
+      Object.entries(this.options.options ?? {}).filter(
         ([, type]) => type.config.global
       )
     )
 
-    const program = new NoArg<TNewName, TMixConfig>(
-      name,
+    const program = new NoArg<
+      MixConfig<typeof this.options, { name: TNewName } & TNewConfig>
+    >(
+      NoArgConstructorSymbol,
       {
-        disableEqualValue: this.config.disableEqualValue,
-        errorOnDuplicateOption: this.config.errorOnDuplicateOption,
-        ...config,
+        name,
+        ...options,
         options: {
           ...globalOptions,
-          ...(config.options ?? {}),
+          ...options.options,
         },
-      } as unknown as TMixConfig,
-      action as Action<TMixConfig>
+      } as any,
+      action as any,
+      { ...this.config, parent: this } as any
     )
 
-    this.config.programs ??= {}
-    this.config.programs[name] = program as any
+    this.options.programs ??= {}
+    this.options.programs[name] = program as any
     return program
   }
 
   private parsePrograms([name, ...args]: string[]) {
-    if (!this.config.programs) return false
-    if (Object.keys(this.config.programs).length === 0) return false
+    if (!this.options.programs) return false
+    if (Object.keys(this.options.programs).length === 0) return false
 
-    const program = Object.getOwnPropertyDescriptor(this.config.programs, name)
+    const program = Object.getOwnPropertyDescriptor(this.options.programs, name)
     if (!program) return false
 
-    this.config.programs[name].run(args)
+    this.options.programs[name].run(args)
     return true
   }
 
@@ -100,15 +139,15 @@ export default class NoArg<
 
   private parseArguments(args: string[]) {
     const duplicateArgs = [...args]
-    this.config.arguments ??= []
+    this.options.arguments ??= []
 
-    if (duplicateArgs.length < this.config.arguments.length) {
+    if (duplicateArgs.length < this.options.arguments.length) {
       const givenArgsCount = duplicateArgs.length
-      const neededArgsCount = this.config.arguments.length
+      const neededArgsCount = this.options.arguments.length
       const missingArgsCount =
-        this.config.arguments.length - duplicateArgs.length
+        this.options.arguments.length - duplicateArgs.length
 
-      const remainingArgs = this.config.arguments
+      const remainingArgs = this.options.arguments
         .slice(givenArgsCount)
         .map(({ name }) => colors.blue(name))
         .join(', ')
@@ -118,7 +157,7 @@ export default class NoArg<
       )
     }
 
-    const result = this.config.arguments.map((config) => {
+    const result = this.options.arguments.map((config) => {
       const input = duplicateArgs.shift()!
       if (!config.type) return input
       const [data, error] = config.type.parse(input)
@@ -132,11 +171,11 @@ export default class NoArg<
     })
 
     const listResult: any[] = []
-    if (this.config.listArgument?.type) {
+    if (this.options.listArgument?.type) {
       const arraySchema = new TypeArray({
-        schema: this.config.listArgument.type,
-        minLength: this.config.listArgument.minLength,
-        maxLength: this.config.listArgument.maxLength,
+        schema: this.options.listArgument.type,
+        minLength: this.options.listArgument.minLength,
+        maxLength: this.options.listArgument.maxLength,
       })
 
       const [data, error] = arraySchema.parse(duplicateArgs)
@@ -146,7 +185,7 @@ export default class NoArg<
       } else {
         throw new NoArgError(
           `${error} for list argument: ${colors.blue(
-            this.config.listArgument.name
+            this.options.listArgument.name
           )}`
         )
       }
@@ -157,12 +196,12 @@ export default class NoArg<
 
   private findOptionSchema(record: ReturnType<typeof getFlagInfo>) {
     if (record.optionType === 'flag') {
-      const schema = this.config.options?.[record.key!]
+      const schema = this.options.options?.[record.key!]
       if (schema) return [record.key!, schema] as const
     }
 
     if (record.optionType === 'alias') {
-      const found = Object.entries(this.config.options ?? {}).find(
+      const found = Object.entries(this.options.options ?? {}).find(
         ([, schema]) => {
           return schema.config.aliases?.includes(record.key!)
         }
@@ -267,7 +306,7 @@ export default class NoArg<
       output[key] = data
     })
 
-    Object.entries(this.config.options ?? {}).forEach(([key, schema]) => {
+    Object.entries(this.options.options ?? {}).forEach(([key, schema]) => {
       const isExist = key in output
       const isRequired = schema.config.required
       const hasDefault = 'default' in schema.config
@@ -318,8 +357,8 @@ export default class NoArg<
     const [argsList, optionsRecord] = this.divideArguments(args)
     const resultArguments = this.parseArguments(argsList)
     const resultOptions = this.parseOptions(optionsRecord)
-    const output = [resultArguments, resultOptions, this.config] as Parameters<
-      Action<TConfig>
+    const output = [resultArguments, resultOptions] as unknown as Parameters<
+      Action<typeof this.options>
     >
 
     this.action(...output)
@@ -340,46 +379,55 @@ export default class NoArg<
   public renderHelp() {
     {
       console.log('')
-      console.log(colors.whiteBright(this.name))
+      console.log(colors.cyan(this.options.name))
 
-      if (this.config.description) {
-        console.log(colors.dim(this.config.description))
+      if (this.options.description) {
+        console.log(colors.dim(this.options.description))
       }
     }
 
     const programEntries =
-      this.config.programs && Object.entries(this.config.programs)
+      this.options.programs && Object.entries(this.options.programs)
 
     {
       console.log('')
       console.log(colors.bold('Usage:'))
       console.log('')
 
-      const args = this.config.arguments
+      const parents: string[] = [this.options.name]
+      ;(function getParent(current: NoArg<NoArgOptions>) {
+        if (!current.config.parent) return
+        parents.unshift(current.config.parent.options.name)
+        getParent(current.config.parent)
+      })(this as any)
+
+      const args = this.options.arguments
         ?.map((argument) => `<${argument.name}>`)
         .join(' ')
 
-      const listArg = this.config.listArgument
-        ? `[...${this.config.listArgument.name}: ${
-            this.config.listArgument.type?.name ?? 'string'
+      const listArg = this.options.listArgument
+        ? `[...${this.options.listArgument.name}: ${
+            this.options.listArgument.type?.name ?? 'string'
           }[${
-            this.config.listArgument.minLength ||
-            this.config.listArgument.minLength
-              ? this.config.listArgument.minLength +
+            this.options.listArgument.minLength ||
+            this.options.listArgument.minLength
+              ? this.options.listArgument.minLength +
                 '-' +
-                this.config.listArgument.maxLength
+                this.options.listArgument.maxLength
               : ''
           }]]`
         : ''
 
       const options =
-        this.config.options && Object.keys(this.config.options).length
+        this.options.options && Object.keys(this.options.options).length
           ? '--[options]'
           : ''
 
       console.log(
         [
-          programEntries?.length ? colors.green('(command)') : '$',
+          colors.cyan('$'),
+          parents.length && colors.black(parents.join(' ')),
+          programEntries?.length && colors.green('(command)'),
           args && colors.red(args),
           listArg && colors.yellow(listArg),
           options && colors.blue(options),
@@ -397,7 +445,7 @@ export default class NoArg<
         ([name, program]) => {
           return [
             colors.red(name),
-            colors.dim(program.config.description ?? '---'),
+            colors.dim(program.options.description ?? '---'),
           ]
         }
       )
@@ -407,10 +455,10 @@ export default class NoArg<
       console.log('')
     }
 
-    if (this.config.arguments?.length) {
+    if (this.options.arguments?.length) {
       console.log(colors.dim('Arguments:'))
 
-      const argumentData = this.config.arguments.map<
+      const argumentData = this.options.arguments.map<
         [CellValue, CellValue, CellValue]
       >((argument) => {
         const { name, type, description } = argument
@@ -426,10 +474,10 @@ export default class NoArg<
       console.log('')
     }
 
-    if (this.config.options) {
+    if (this.options.options) {
       console.log(colors.dim('Options:'))
 
-      const optionData = Object.entries(this.config.options)
+      const optionData = Object.entries(this.options.options)
         .sort(([, a], [, b]) => {
           const isRequired = a.config.required
           const hasDefault = 'default' in a.config

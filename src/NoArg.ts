@@ -288,14 +288,31 @@ export default class NoArg<
 
   private runCore(args: string[]) {
     if (this.parsePrograms(args)) return
+    let hasHelp = false
+    let hasUsage = false
+    args.some((current, i, array) => {
+      if (current === '--help' || current === '-h') {
+        hasHelp = true
 
-    const hasHelp = args.find((arg) => {
-      return arg === '--help' || arg === '-h'
+        const next = array[i + 1]
+        if (next === '--usage' || next === '--usages' || next === '-u') {
+          hasUsage = true
+        }
+
+        return true
+      }
     })
 
-    if (hasHelp && !this.config.disableHelp) {
-      this.renderHelp()
-      return process.exit(0)
+    if (!this.config.disableHelp) {
+      if (hasUsage) {
+        this.renderUsages()
+        return process.exit(0)
+      }
+
+      if (hasHelp) {
+        this.renderHelp()
+        return process.exit(0)
+      }
     }
 
     const [argsList, optionsRecord] = this.divideArguments(args)
@@ -455,18 +472,46 @@ export default class NoArg<
       console.log(table.toString())
       console.log('')
     }
+  }
+
+  public renderUsages() {
+    console.log(colors.bold(colors.cyan('📝 USAGE:')))
+
+    function printValid(...args: string[]) {
+      console.log('  ', colors.green('✔   ' + args.join(' ')))
+    }
+
+    function printInvalid(...args: string[]) {
+      console.log('  ', colors.red('✖   ' + args.join(' ')))
+    }
+
+    function printGroupHeader(...args: string[]) {
+      console.log(' ⚙︎', colors.black(args.join(' ')))
+    }
 
     {
-      console.log(colors.bold(colors.green('📝 NOTE:')))
-
-      if (this.config.disableEqualValue) {
-        console.log('  ', colors.black('Options with equal value is disabled'))
-        console.log('  ', colors.green('✔   --option value'))
-        console.log('  ', colors.red('✖   --option=value'))
+      if (this.config.errorOnMultipleValue) {
+        printGroupHeader('Multiple value is disabled')
+        printValid('--option value')
+        printInvalid('--option value value')
       } else {
-        console.log('  ', colors.black('Options with equal value is enabled'))
-        console.log('  ', colors.green('✔   --option value'))
-        console.log('  ', colors.green('✔   --option=value'))
+        printGroupHeader('Multiple value is enabled')
+        printValid('--option value')
+        printValid('--option', colors.black('value'), 'value')
+      }
+
+      console.log('')
+    }
+
+    {
+      if (this.config.disableEqualValue) {
+        printGroupHeader('Options with equal value is disabled')
+        printValid('--option value')
+        printInvalid('--option=value')
+      } else {
+        printGroupHeader('Options with equal value is enabled')
+        printValid('--option value')
+        printValid('--option=value')
       }
 
       console.log('')

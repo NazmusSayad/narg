@@ -26,6 +26,7 @@ const app = new NoArg(
       maxLength: 3,
     },
 
+    // errorOnMultipleValues: true,
     errorOnDuplicateOption: true,
   },
 
@@ -78,6 +79,9 @@ app.create(
 
 app.run([
   'build',
+
+  '-h',
+  '-u',
 
   '--root',
   'npmize-test',

@@ -79,7 +79,7 @@ const build = app.create(
 const deep = build.create('test', {}, (args, options) => {})
 
 // build.renderHelp()
-deep.renderHelp()
+deep.renderUsages()
 
 // app.run([
 //   'build',

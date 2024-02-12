@@ -42,10 +42,10 @@ export type NoArgConfig = Partial<
 >
 
 export const defaultNoArgConfig = {
-  disableHelp: false,
-  disableEqualValue: false,
-  errorOnMultipleValue: false,
-  errorOnDuplicateOption: false,
+  help: true,
+  equalAssign: true,
+  duplicateValue: true,
+  duplicateOption: true,
 }
 
 export type MixConfig<

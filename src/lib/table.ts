@@ -2,6 +2,10 @@ import MJSTable from 'cli-table3'
 import * as CJSTable from 'cli-table3'
 import currentModule from '../currentModule'
 
+const terminalWidth = process.stdout.columns - 3
+const tableWidth =
+  terminalWidth > 80 ? 80 : terminalWidth < 50 ? 50 : terminalWidth
+
 const Table = currentModule.isCJS
   ? CJSTable
   : currentModule.isESM
@@ -21,11 +25,11 @@ type Test<TArray extends number[]> = {
 export function CustomTable<const TWidths extends number[]>(
   widths: TWidths,
   ...items: Test<TWidths>[]
-): CJSTable.Table {
+) {
   const maxLength = Math.max(...items.map((item) => item.length))
   const totalWidth = widths.reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0
   const colWidths = widths.map((width) => {
-    return Math.floor((70 / totalWidth) * (width ?? 1))
+    return Math.floor((tableWidth / totalWidth) * (width ?? 1))
   })
 
   const table = new Table!({
@@ -42,5 +46,5 @@ export function CustomTable<const TWidths extends number[]>(
   })
 
   table.push(...items)
-  return table
+  console.log(table.toString())
 }

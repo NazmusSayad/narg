@@ -12,6 +12,7 @@ import { NoArgError } from './lib/extra'
 import { CustomTable } from './lib/table'
 import { TSchema } from './schemaType/type.t'
 import { TypeBoolean, TypeArray, TypeTuple } from './schemaType/index'
+import usage from './usage'
 
 const NoArgConstructorSymbol = Symbol('NoArgConstructor')
 export default class NoArg<TConfig extends NoArgOptions> {
@@ -241,12 +242,10 @@ export default class NoArg<TConfig extends NoArgOptions> {
         const [key, schema] = self.findOptionSchema(record)
         currentOptionKey = key
 
-        if (output[currentOptionKey]) {
-          if (self.config.errorOnDuplicateOption) {
-            throw new NoArgError(
-              `Duplicate option ${colors.cyan(record.raw!)} entered`
-            )
-          }
+        if (output[currentOptionKey] && !self.config.duplicateOption) {
+          throw new NoArgError(
+            `Duplicate option ${colors.cyan(record.raw!)} entered`
+          )
         }
 
         return (output[currentOptionKey] = {
@@ -284,7 +283,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
         value.schema instanceof TypeArray || value.schema instanceof TypeTuple
 
       if (!isList && value.values.length > 1) {
-        if (this.config.errorOnMultipleValue) {
+        if (!this.config.duplicateValue) {
           throw new NoArgError(
             `Multiple value entered [${value.values
               .map(colors.green)
@@ -334,7 +333,13 @@ export default class NoArg<TConfig extends NoArgOptions> {
         hasHelp = true
 
         const next = array[i + 1]
-        if (next === '--usage' || next === '--usages' || next === '-u') {
+        if (
+          next === '--how' ||
+          next === '--usage' ||
+          next === '--usages' ||
+          next === '-u' ||
+          next === '-h'
+        ) {
           hasUsage = true
         }
 
@@ -342,7 +347,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
       }
     })
 
-    if (!this.config.disableHelp) {
+    if (this.config.help) {
       if (hasUsage) {
         this.renderUsages()
         return process.exit(0)
@@ -374,6 +379,10 @@ export default class NoArg<TConfig extends NoArgOptions> {
         return process.exit(1)
       } else throw error
     }
+  }
+
+  public renderUsages() {
+    usage(this.config)
   }
 
   public renderHelp() {
@@ -450,8 +459,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
         }
       )
 
-      const table = CustomTable([1, 2], ...programData)
-      console.log(table.toString())
+      CustomTable([1, 2], ...programData)
       console.log('')
     }
 
@@ -469,8 +477,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
         ]
       })
 
-      const table = CustomTable([5, 3, 10], ...argumentData)
-      console.log(table.toString())
+      CustomTable([5, 3, 10], ...argumentData)
       console.log('')
     }
 
@@ -516,52 +523,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
           ]
         })
 
-      const table = CustomTable([5, 3, 10], ...optionData)
-      console.log(table.toString())
-      console.log('')
-    }
-  }
-
-  public renderUsages() {
-    console.log(colors.bold(colors.cyan('📝 USAGE:')))
-
-    function printValid(...args: string[]) {
-      console.log('  ', colors.green('✔   ' + args.join(' ')))
-    }
-
-    function printInvalid(...args: string[]) {
-      console.log('  ', colors.red('✖   ' + args.join(' ')))
-    }
-
-    function printGroupHeader(...args: string[]) {
-      console.log(' ⚙︎', colors.black(args.join(' ')))
-    }
-
-    {
-      if (this.config.errorOnMultipleValue) {
-        printGroupHeader('Multiple value is disabled')
-        printValid('--option value')
-        printInvalid('--option value value')
-      } else {
-        printGroupHeader('Multiple value is enabled')
-        printValid('--option value')
-        printValid('--option', colors.black('value'), 'value')
-      }
-
-      console.log('')
-    }
-
-    {
-      if (this.config.disableEqualValue) {
-        printGroupHeader('Options with equal value is disabled')
-        printValid('--option value')
-        printInvalid('--option=value')
-      } else {
-        printGroupHeader('Options with equal value is enabled')
-        printValid('--option value')
-        printValid('--option=value')
-      }
-
+      CustomTable([5, 3, 10], ...optionData)
       console.log('')
     }
   }

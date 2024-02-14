@@ -5,20 +5,42 @@ import {
   NoArgOptions,
   defaultNoArgConfig,
 } from './config'
+import usage from './usage'
 import colors from './lib/colors'
-import { getFlagInfo } from './utils'
+import { Prettify, getFlagInfo } from './utils'
 import { CellValue } from 'cli-table3'
 import { NoArgError } from './lib/extra'
 import { CustomTable } from './lib/table'
 import { TSchema } from './schemaType/type.t'
 import { TypeBoolean, TypeArray, TypeTuple } from './schemaType/index'
-import usage from './usage'
 
 const NoArgConstructorSymbol = Symbol('NoArgConstructor')
 export default class NoArg<TConfig extends NoArgOptions> {
   private options
   private action
   private config
+
+  static verifyOptionName(type: string, string: string) {
+    if (string.length == 0) {
+      throw new Error(`${type} name cannot be empty`)
+    }
+
+    if (string.startsWith('-')) {
+      throw new Error(`${type} "${string}" should not start with "-"`)
+    }
+
+    if (string.includes(' ')) {
+      throw new Error(`${type} "${string}" should not contain spaces`)
+    }
+
+    if (string.includes('!')) {
+      throw new Error(`${type} "${string}" should not contain "!"`)
+    }
+
+    if (string.includes('=')) {
+      throw new Error(`${type} "${string}" should not contain "="`)
+    }
+  }
 
   constructor(
     symbol: typeof NoArgConstructorSymbol,
@@ -30,6 +52,11 @@ export default class NoArg<TConfig extends NoArgOptions> {
       throw new Error('NoArg cannot be instantiated directly')
     }
 
+    options.options &&
+      Object.keys(options.options).forEach((name) => {
+        NoArg.verifyOptionName('Flag', name)
+      })
+
     this.action = action
     this.options = {
       ...options,
@@ -38,18 +65,6 @@ export default class NoArg<TConfig extends NoArgOptions> {
     this.config = {
       ...defaultNoArgConfig,
       ...config,
-    }
-
-    if (options.options) {
-      for (let name in options.options) {
-        if (name.length == 0) {
-          throw new Error(`Option name cannot be empty`)
-        }
-
-        if (name.startsWith('-')) {
-          throw new Error(`Option name cannot start with - | "${name}"`)
-        }
-      }
     }
   }
 
@@ -218,26 +233,41 @@ export default class NoArg<TConfig extends NoArgOptions> {
     typeof getFlagInfo
   >[]) {
     if (!record && records.length === 0) return {}
-
     const self = this
     if (!record?.optionType) {
       throw new NoArgError(
-        `Something went wrong, received ${colors.yellow(record.raw)}`
+        `Something went wrong, received ${colors.yellow(
+          record.raw
+        )}. Expected an option`
       )
     }
 
     let currentOptionKey: string = record.raw
     const output: Record<
       string,
-      {
-        schema: TSchema
-        optionType: Exclude<ReturnType<typeof getFlagInfo>['optionType'], null>
-        values: string[]
-        raw: string
-      }
+      Prettify<
+        ReturnType<typeof getFlagInfo> & {
+          schema: TSchema
+          values: string[]
+          optionType: Exclude<
+            ReturnType<typeof getFlagInfo>['optionType'],
+            null
+          >
+        }
+      >
     > = {}
 
     function checkRecord(record: ReturnType<typeof getFlagInfo>) {
+      if (record.key) {
+        try {
+          NoArg.verifyOptionName('Option', record.key)
+        } catch (err: any) {
+          throw new NoArgError(
+            err.message + ' for option ' + colors.red(record.raw)
+          )
+        }
+      }
+
       if (record.optionType) {
         const [key, schema] = self.findOptionSchema(record)
         currentOptionKey = key
@@ -248,11 +278,23 @@ export default class NoArg<TConfig extends NoArgOptions> {
           )
         }
 
+        if (record.hasBooleanEndValue) {
+          if (schema instanceof TypeBoolean) record.value = 'false'
+          else
+            throw new NoArgError(
+              `Only boolean types accept '!' assignment for option: ${colors.red(
+                record.raw
+              )}`
+            )
+        }
+
         return (output[currentOptionKey] = {
           schema,
-          optionType: record.optionType,
           values: record.value !== null ? [record.value] : [],
-          raw: record.raw,
+
+          ...(record as typeof record & {
+            optionType: typeof record.optionType
+          }),
         })
       }
 

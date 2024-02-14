@@ -15,16 +15,31 @@ export function getFlagInfo(arg: string) {
     ? ('alias' as const)
     : null
 
-  const key = isFlag ? arg.slice(2) : isAlias ? arg.slice(1) : null
-  const hasValue = key && optionWithValueRegexp.test(key)
-  const value = hasValue
-    ? arg.match(optionWithValueRegexp)?.groups?.value ?? null
-    : null
+  let key = isFlag ? arg.slice(2) : isAlias ? arg.slice(1) : null
+  let value = null
+  let hasBooleanEndValue = false
+
+  if (key) {
+    const hasValue = optionWithValueRegexp.test(key)
+
+    if (hasValue) {
+      const { value: _value = null, key: _key = null } =
+        key.match(optionWithValueRegexp)?.groups ?? {}
+
+      key = _key
+      value = _value
+    } else if (key.endsWith('!')) {
+      key = key.slice(0, -1)
+      hasBooleanEndValue = true
+    }
+  }
 
   return {
     raw: arg,
-    optionType,
+
+    key,
     value,
-    key: hasValue ? key.match(optionWithValueRegexp)?.groups?.key ?? null : key,
+    optionType,
+    hasBooleanEndValue,
   }
 }

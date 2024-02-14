@@ -1,5 +1,6 @@
-import { TypeConfig } from '../config'
+import NoArg from '../NoArg'
 import { Prettify } from '../utils'
+import { TypeConfig } from '../config'
 import { ResultErr, ResultOk } from './result'
 import { ExtractTypeOutput, InferTypeAndUpdate, TPrimitive } from './type.t'
 
@@ -16,7 +17,7 @@ export class TypeCore<TConfig extends TypeConfig> {
     return [result.value, null, true]
   }
 
-  checkType(value: unknown): ResultOk | ResultErr {
+  checkType(_value: unknown): ResultOk | ResultErr {
     return new ResultErr("This type doesn't have a checkType method")
   }
 
@@ -38,6 +39,10 @@ export class TypeCore<TConfig extends TypeConfig> {
   aliases<TAliases extends string[], SELF = typeof this>(
     ...aliases: TAliases
   ): InferTypeAndUpdate<SELF, Prettify<TConfig & { aliases: TAliases }>> {
+    aliases.forEach((alias) => {
+      NoArg.verifyOptionName('Alias', alias)
+    })
+
     this.config.aliases = [...new Set(aliases)].sort(
       (a, b) => a.length - b.length
     )

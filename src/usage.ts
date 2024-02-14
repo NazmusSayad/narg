@@ -89,6 +89,7 @@ function renderHowToUseOptions() {
     tableGroup(
       'boolean\n(false)',
       'false',
+      '--boolean!',
       '--boolean false',
       '--boolean=false',
       '--boolean no',

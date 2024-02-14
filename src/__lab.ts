@@ -87,9 +87,9 @@ deep.renderUsages()
 //   '--root',
 //   'npmize-test',
 
-//   '--node',
+//   '--node!!',
 //   // '-n',
-//   'NO',
+//   // 'NO',
 //   // 'false',
 
 //   '-t',

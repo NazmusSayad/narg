@@ -1,7 +1,5 @@
 console.clear()
-
-import t from './schemaType/t'
-import NoArg from './NoArg'
+import NoArg, { t } from '.'
 
 const app = NoArg.create(
   'app',
@@ -79,7 +77,7 @@ const build = app.create(
 const deep = build.create('test', {}, (args, options) => {})
 
 // build.renderHelp()
-deep.renderUsages()
+app.run(['1', 'yes', '3', 'no', '--help', '--use'])
 
 // app.run([
 //   'build',

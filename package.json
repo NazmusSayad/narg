@@ -1,4 +1,10 @@
 {
+  "name": "noarg",
+  "version": "1.0.2",
+  "dependencies": {
+    "ansi-colors": "^4.1.3",
+    "cli-table3": "^0.6.3"
+  },
   "devDependencies": {
     "@types/node": "^20.11.10",
     "@types/nodemon": "^1.19.6",
@@ -6,8 +12,6 @@
     "npmize": "^0.0.8",
     "typescript": "^5.3.3"
   },
-  "name": "noarg",
-  "version": "1.0.1",
   "scripts": {
     "dev": "npmize dev",
     "build": "npmize build",
@@ -20,9 +24,5 @@
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     }
-  },
-  "dependencies": {
-    "ansi-colors": "^4.1.3",
-    "cli-table3": "^0.6.3"
   }
 }

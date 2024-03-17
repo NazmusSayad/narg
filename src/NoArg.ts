@@ -368,28 +368,23 @@ export default class NoArg<TConfig extends NoArgOptions> {
 
   private runCore(args: string[]) {
     if (this.parsePrograms(args)) return
-    let hasHelp = false
-    let hasUsage = false
-    args.some((current, i, array) => {
-      if (current === '--help' || current === '-h') {
-        hasHelp = true
-
-        const next = array[i + 1]
-        if (
-          next === '--how' ||
-          next === '--usage' ||
-          next === '--usages' ||
-          next === '-u' ||
-          next === '-h'
-        ) {
-          hasUsage = true
-        }
-
-        return true
-      }
-    })
 
     if (this.config.help) {
+      let hasHelp = false
+      let hasUsage = false
+      args.some((current, i, array) => {
+        if (current === '--help' || current === '-h') {
+          hasHelp = true
+
+          const next = array[i + 1]
+          if (next === '--use' || next === '-u') {
+            hasUsage = true
+          }
+
+          return true
+        }
+      })
+
       if (hasUsage) {
         this.renderUsages()
         return process.exit(0)

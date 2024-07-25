@@ -1,4 +1,4 @@
-import { NoArgConfig } from './config'
+import { NoArgConfig } from './config-type'
 import colors from './lib/colors'
 import { CustomTable } from './lib/table'
 
@@ -66,7 +66,7 @@ function renderStructure() {
   )
 }
 
-function renderHowToUseOptions() {
+function renderHowToUseOptions(config: NoArgConfig) {
   printGroupHeader('How to use options:')
   CustomTable(
     [1, 3, 2],
@@ -89,7 +89,7 @@ function renderHowToUseOptions() {
     tableGroup(
       'boolean\n(false)',
       'false',
-      '--boolean!',
+      '--boolean' + config.booleanFalsePrefixSuffix,
       '--boolean false',
       '--boolean=false',
       '--boolean no',
@@ -112,7 +112,7 @@ export default function (config: NoArgConfig) {
 
   renderStructure()
   console.log('')
-  renderHowToUseOptions()
+  renderHowToUseOptions(config)
   console.log('')
 
   console.log(colors.bold(colors.cyan('📝 Configuration:')))

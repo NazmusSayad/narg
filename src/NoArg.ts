@@ -3,38 +3,44 @@ import {
   MixConfig,
   NoArgConfig,
   NoArgOptions,
-  defaultNoArgConfig,
-} from './config'
+  FlagRecord,
+} from './config-type'
 import usage from './usage'
 import colors from './lib/colors'
-import { Prettify, getFlagInfo } from './utils'
+import { Prettify } from './utils'
 import { CellValue } from 'cli-table3'
 import { NoArgError } from './lib/extra'
 import { CustomTable } from './lib/table'
 import { TSchema } from './schemaType/type.t'
 import { TypeBoolean, TypeArray, TypeTuple } from './schemaType/index'
+import { defaultNoArgConfig } from './config'
 
-const NoArgConstructorSymbol = Symbol('NoArgConstructor')
 export default class NoArg<TConfig extends NoArgOptions> {
   private options
   private action
   private config
 
-  static verifyOptionName(type: string, string: string) {
+  static verifyOptionName(
+    type: string,
+    string: string,
+    booleanFalsePrefixSuffix?: string
+  ) {
     if (string.length == 0) {
       throw new Error(`${type} name cannot be empty`)
+    }
+
+    if (string.includes(' ')) {
+      throw new Error(`${type} "${string}" can not contain spaces`)
     }
 
     if (string.startsWith('-')) {
       throw new Error(`${type} "${string}" should not start with "-"`)
     }
 
-    if (string.includes(' ')) {
-      throw new Error(`${type} "${string}" should not contain spaces`)
-    }
-
-    if (string.includes('!')) {
-      throw new Error(`${type} "${string}" should not contain "!"`)
+    if (booleanFalsePrefixSuffix && string.includes(booleanFalsePrefixSuffix)) {
+      throw new Error(
+        `${type} "${string}" should not contain "${booleanFalsePrefixSuffix}"`
+      )
     }
 
     if (string.includes('=')) {
@@ -54,7 +60,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
 
     options.options &&
       Object.keys(options.options).forEach((name) => {
-        NoArg.verifyOptionName('Flag', name)
+        NoArg.verifyOptionName('Flag', name, config.booleanFalsePrefixSuffix)
       })
 
     this.action = action
@@ -133,10 +139,10 @@ export default class NoArg<TConfig extends NoArgOptions> {
   private divideArguments(args: string[]) {
     let isOptionReached = false
     const argList: string[] = []
-    const options: ReturnType<typeof getFlagInfo>[] = []
+    const options: FlagRecord[] = []
 
     for (let arg of args) {
-      const result = getFlagInfo(arg)
+      const result = this.parseFlag(arg)
 
       if (result.optionType && !isOptionReached) {
         isOptionReached = true
@@ -210,7 +216,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
     return [...result, ...listResult]
   }
 
-  private findOptionSchema(record: ReturnType<typeof getFlagInfo>) {
+  private findOptionSchema(record: FlagRecord) {
     if (record.optionType === 'flag') {
       const schema = this.options.options?.[record.key!]
       if (schema) return [record.key!, schema] as const
@@ -229,9 +235,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
     throw new NoArgError(`Unknown option ${colors.red(record.raw)} entered`)
   }
 
-  private parseOptionsInner([record, ...records]: ReturnType<
-    typeof getFlagInfo
-  >[]) {
+  private parseOptionsInner([record, ...records]: FlagRecord[]) {
     if (!record && records.length === 0) return {}
     const self = this
     if (!record?.optionType) {
@@ -246,21 +250,22 @@ export default class NoArg<TConfig extends NoArgOptions> {
     const output: Record<
       string,
       Prettify<
-        ReturnType<typeof getFlagInfo> & {
+        FlagRecord & {
           schema: TSchema
           values: string[]
-          optionType: Exclude<
-            ReturnType<typeof getFlagInfo>['optionType'],
-            null
-          >
+          optionType: Exclude<FlagRecord['optionType'], null>
         }
       >
     > = {}
 
-    function checkRecord(record: ReturnType<typeof getFlagInfo>) {
+    function checkRecord(record: FlagRecord) {
       if (record.key) {
         try {
-          NoArg.verifyOptionName('Option', record.key)
+          NoArg.verifyOptionName(
+            'Option',
+            record.key,
+            self.config.booleanFalsePrefixSuffix
+          )
         } catch (err: any) {
           throw new NoArgError(
             err.message + ' for option ' + colors.red(record.raw)
@@ -282,9 +287,9 @@ export default class NoArg<TConfig extends NoArgOptions> {
           if (schema instanceof TypeBoolean) record.value = 'false'
           else
             throw new NoArgError(
-              `Only boolean types accept '!' assignment for option: ${colors.red(
-                record.raw
-              )}`
+              `Only boolean types accept '${
+                self.config.booleanFalsePrefixSuffix
+              }' assignment for option: ${colors.red(record.raw)}`
             )
         }
 
@@ -306,7 +311,47 @@ export default class NoArg<TConfig extends NoArgOptions> {
     return output
   }
 
-  private parseOptions(records: ReturnType<typeof getFlagInfo>[]): any {
+  private parseFlag(arg: string) {
+    const isFlag = FlagRegexp.test(arg)
+    const isAlias = AliasRegexp.test(arg)
+    const optionType = isFlag
+      ? ('flag' as const)
+      : isAlias
+      ? ('alias' as const)
+      : null
+
+    let key = isFlag ? arg.slice(2) : isAlias ? arg.slice(1) : null
+    let value = null
+    let hasBooleanEndValue = false
+
+    if (key) {
+      const hasValue = OptionWithValueRegexp.test(key)
+
+      if (hasValue) {
+        const { value: _value = null, key: _key = null } =
+          key.match(OptionWithValueRegexp)?.groups ?? {}
+
+        key = _key
+        value = _value
+      } else if (
+        this.config.booleanFalsePrefixSuffix &&
+        key.endsWith(this.config.booleanFalsePrefixSuffix)
+      ) {
+        key = key.slice(0, -1)
+        hasBooleanEndValue = true
+      }
+    }
+
+    return {
+      raw: arg,
+      key,
+      value,
+      optionType,
+      hasBooleanEndValue,
+    }
+  }
+
+  private parseOptions(records: FlagRecord[]): any {
     const options = this.parseOptionsInner(records)
     const output: Record<string, any> = {}
 
@@ -565,3 +610,8 @@ export default class NoArg<TConfig extends NoArgOptions> {
     }
   }
 }
+
+const NoArgConstructorSymbol = Symbol('NoArgConstructor')
+const AliasRegexp = /^(\-)([^\-])/
+const FlagRegexp = /^(\-\-)([^\-])/
+const OptionWithValueRegexp = /^(?<key>[^\=]+)\=(?<value>.+)/

@@ -1,6 +1,6 @@
 import NoArg from '../NoArg'
 import { Prettify } from '../utils'
-import { TypeConfig } from '../config'
+import { TypeConfig } from '../config-type'
 import { ResultErr, ResultOk } from './result'
 import { ExtractTypeOutput, InferTypeAndUpdate, TPrimitive } from './type.t'
 

@@ -1,21 +1,19 @@
 {
   "name": "noarg",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "dependencies": {
     "ansi-colors": "^4.1.3",
     "cli-table3": "^0.6.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.10",
-    "@types/nodemon": "^1.19.6",
-    "nodemon": "^3.0.3",
     "npmize": "^0.0.8",
     "typescript": "^5.3.3"
   },
   "scripts": {
     "dev": "npmize dev",
     "build": "npmize build",
-    "lab": "nodemon ./src/__lab.ts"
+    "lab": "nw ./src/__lab.ts"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",

@@ -5,7 +5,7 @@ import {
   TypeNumber,
   TypeString,
 } from './index'
-import { TypeConfig } from '../config'
+import { TypeConfig } from '../config-type'
 
 export type TPrimitive =
   | TypeString<TypeConfig & Record<string, unknown>>

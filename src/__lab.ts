@@ -24,7 +24,7 @@ const app = NoArg.create(
       maxLength: 3,
     },
 
-    config: {},
+    config: { booleanFalsePrefixSuffix: '\\' },
   },
 
   (args, options) => {
@@ -77,30 +77,36 @@ const build = app.create(
 const deep = build.create('test', {}, (args, options) => {})
 
 // build.renderHelp()
-app.run(['1', 'yes', '3', 'no', '--help', '--use'])
+// app.run(['1', 'yes', '3', 'no', '--help', '--use'])
 
-// app.run([
-//   'build',
+app.run([
+  'build',
 
-//   '--root',
-//   'npmize-test',
+  '--root',
+  'npmize-test',
 
-//   '--node!!',
-//   // '-n',
-//   // 'NO',
-//   // 'false',
+  '--node',
+  // '-n',
+  // 'NO',
+  // 'false',
 
-//   '-t',
-//   'strict',
-//   'noEmit',
+  '-t',
+  'strict',
+  'noEmit',
 
-//   '-o',
-//   'dist',
+  '-o',
+  'dist',
 
-//   '-m',
-//   'cjs',
+  '-m',
+  'cjs',
 
-//   '--numbers=0001',
-//   '1',
-//   '10',
-// ])
+  '--numbers=0001',
+  '1',
+  '10',
+
+  '--test\\',
+
+  '-h',
+
+  '-u',
+])

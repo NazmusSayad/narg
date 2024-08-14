@@ -14,6 +14,7 @@ import { CustomTable } from './lib/table'
 import { TSchema } from './schemaType/type.t'
 import { TypeBoolean, TypeArray, TypeTuple } from './schemaType/index'
 import { defaultNoArgConfig } from './config'
+import * as readLineSync from 'readline-sync'
 
 export default class NoArg<TConfig extends NoArgOptions> {
   private options
@@ -162,6 +163,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
   private parseArguments(args: string[]) {
     const duplicateArgs = [...args]
     this.options.arguments ??= []
+    this.options.optionalArguments ??= []
 
     if (duplicateArgs.length < this.options.arguments.length) {
       const givenArgsCount = duplicateArgs.length
@@ -179,7 +181,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
       )
     }
 
-    const result = this.options.arguments.map((config) => {
+    const resultArgs = this.options.arguments.map((config) => {
       const input = duplicateArgs.shift()!
       if (!config.type) return input
       const [data, error] = config.type.parse(input)
@@ -192,7 +194,21 @@ export default class NoArg<TConfig extends NoArgOptions> {
       return data
     })
 
-    const listResult: any[] = []
+    const resultOptArgs = this.options.optionalArguments?.map((config) => {
+      if (duplicateArgs.length === 0) return null
+      const input = duplicateArgs.shift()!
+      if (!config.type) return input
+      const [data, error] = config.type.parse(input)
+      if (error) {
+        throw new NoArgError(
+          `${error} for optional argument: ${colors.blue(config.name)}`
+        )
+      }
+
+      return data
+    })
+
+    const resultList: any[] = []
     if (this.options.listArgument?.type) {
       const arraySchema = new TypeArray({
         schema: this.options.listArgument.type,
@@ -203,7 +219,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
       const [data, error] = arraySchema.parse(duplicateArgs)
 
       if (data) {
-        listResult.push(...data)
+        resultList.push(...data)
       } else {
         throw new NoArgError(
           `${error} for list argument: ${colors.blue(
@@ -213,7 +229,7 @@ export default class NoArg<TConfig extends NoArgOptions> {
       }
     }
 
-    return [...result, ...listResult]
+    return { resultArgs, resultOptArgs, resultList }
   }
 
   private findOptionSchema(record: FlagRecord) {
@@ -393,11 +409,28 @@ export default class NoArg<TConfig extends NoArgOptions> {
     })
 
     Object.entries(this.options.options ?? {}).forEach(([key, schema]) => {
-      const isExist = key in output
+      const hasValue = key in output
       const isRequired = schema.config.required
       const hasDefault = 'default' in schema.config
 
-      if (!isExist) {
+      if (!hasValue) {
+        if (schema.config.ask) {
+          while (true) {
+            const input = readLineSync.question(
+              `--${colors.red(key)} ${colors.cyan(
+                schema.config.ask
+              )}\n${colors.yellow(schema.name)}${hasDefault ? '?' : ''}: `,
+              { defaultInput: schema.config.default }
+            )
+
+            const [result, error, ok] = schema.parse(input)
+            if (ok) return (output[key] = result)
+
+            console.log(colors.red(error))
+            console.log('')
+          }
+        }
+
         if (hasDefault) {
           return (output[key] = schema.config.default)
         }
@@ -417,38 +450,39 @@ export default class NoArg<TConfig extends NoArgOptions> {
     if (this.config.help) {
       let hasHelp = false
       let hasUsage = false
-      args.some((current, i, array) => {
-        if (current === '--help' || current === '-h') {
+      args.some((current) => {
+        if (current === '--help') {
           hasHelp = true
+          return true
+        }
 
-          const next = array[i + 1]
-          if (next === '--use' || next === '-u') {
-            hasUsage = true
-          }
-
+        if (current === '--help-use') {
+          hasUsage = true
           return true
         }
       })
 
-      if (hasUsage) {
-        this.renderUsages()
-        return process.exit(0)
-      }
-
-      if (hasHelp) {
-        this.renderHelp()
+      if (hasHelp || hasUsage) {
+        console.clear()
+        hasHelp && this.renderHelp()
+        hasUsage && this.renderUsages()
         return process.exit(0)
       }
     }
 
     const [argsList, optionsRecord] = this.divideArguments(args)
-    const resultArguments = this.parseArguments(argsList)
+    const { resultArgs, resultOptArgs, resultList } =
+      this.parseArguments(argsList)
     const resultOptions = this.parseOptions(optionsRecord)
-    const output = [resultArguments, resultOptions] as unknown as Parameters<
-      Action<typeof this.options>
-    >
 
-    this.action(...output)
+    const output = {
+      options: resultOptions,
+      args: resultArgs,
+      optArgs: resultOptArgs,
+      listArgs: resultList,
+    } as unknown as Parameters<Action<typeof this.options>>
+    this.action(output as any)
+
     return output
   }
 
@@ -496,17 +530,21 @@ export default class NoArg<TConfig extends NoArgOptions> {
         ?.map((argument) => `<${argument.name}>`)
         .join(' ')
 
+      const optArgs = this.options.optionalArguments
+        ?.map((argument) => `<${argument.name}>?`)
+        .join(' ')
+
       const listArg = this.options.listArgument
-        ? `[...${this.options.listArgument.name}: ${
+        ? `<${this.options.listArgument.name}: ${
             this.options.listArgument.type?.name ?? 'string'
-          }[${
+          }>[${
             this.options.listArgument.minLength ||
             this.options.listArgument.minLength
               ? this.options.listArgument.minLength +
                 '-' +
                 this.options.listArgument.maxLength
               : ''
-          }]]`
+          }]`
         : ''
 
       const options =
@@ -520,7 +558,8 @@ export default class NoArg<TConfig extends NoArgOptions> {
           parents.length && colors.black(parents.join(' ')),
           programEntries?.length && colors.green('(command)'),
           args && colors.red(args),
-          listArg && colors.yellow(listArg),
+          optArgs && colors.blue(optArgs),
+          listArg && colors.green(listArg),
           options && colors.blue(options),
         ]
           .filter(Boolean)
@@ -545,21 +584,69 @@ export default class NoArg<TConfig extends NoArgOptions> {
       console.log('')
     }
 
-    if (this.options.arguments?.length) {
+    if (
+      this.options.arguments?.length ||
+      this.options.optionalArguments?.length
+    ) {
       console.log(colors.dim('Arguments:'))
 
-      const argumentData = this.options.arguments.map<
+      const argumentData = this.options.arguments?.map<
+        [CellValue, CellValue, CellValue]
+      >((argument) => {
+        const { name, type, description } = argument
+        return [
+          colors.red(name),
+          colors.yellow(type?.name ?? 'string'),
+          colors.dim(description ?? '---'),
+        ]
+      })
+
+      const optArgumentData = this.options.optionalArguments?.map<
         [CellValue, CellValue, CellValue]
       >((argument) => {
         const { name, type, description } = argument
         return [
           colors.blue(name),
-          colors.red(type?.name ?? 'string'),
+          colors.yellow(type?.name ?? 'string') + '?',
           colors.dim(description ?? '---'),
         ]
       })
 
-      CustomTable([5, 3, 10], ...argumentData)
+      CustomTable(
+        [5, 3, 10],
+        ...(argumentData ?? []),
+        ...(optArgumentData ?? [])
+      )
+      console.log('')
+    }
+
+    if (this.options.listArgument) {
+      const { name, type, minLength, maxLength } = this.options.listArgument
+      console.log(colors.dim('List Argument: ' + colors.green(name)))
+      console.log('', '----------------')
+
+      console.log('', 'Argument Type  :', colors.yellow(type?.name ?? 'string'))
+
+      minLength &&
+        console.log(
+          '',
+          'Minimum length :',
+          `Enter at least ${colors.yellow(String(minLength))} ${
+            minLength < 2 ? 'item' : 'items'
+          }`
+        )
+
+      maxLength != null &&
+        console.log(
+          '',
+          'Maximum length :',
+          `Enter upto ${colors.yellow(String(maxLength))} ${
+            maxLength < 2 ? 'item' : 'items'
+          }`
+        )
+      ;(!minLength || minLength < 1) &&
+        console.log('', colors.black('Tips: You can also leave it empty'))
+
       console.log('')
     }
 

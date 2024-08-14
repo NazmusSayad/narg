@@ -28,6 +28,13 @@ export class TypeCore<TConfig extends TypeConfig> {
     return this as any
   }
 
+  ask<TDefault extends string, SELF = typeof this>(
+    question?: TDefault
+  ): InferTypeAndUpdate<SELF, Prettify<TConfig & { ask: TDefault }>> {
+    this.config.ask = question ?? 'Enter a value:'
+    return this as any
+  }
+
   global<SELF = typeof this>(): InferTypeAndUpdate<
     SELF,
     Prettify<TConfig & { global: true }>

@@ -35,6 +35,7 @@ export type TypeConfig = {
   required?: boolean
   global?: boolean
   default?: any
+  ask?: string
 }
 
 export type NoArgOptions = {
@@ -42,6 +43,7 @@ export type NoArgOptions = {
   programs?: Record<string, NoArg<NoArgOptions>>
   options?: Record<string, TSchema>
   arguments?: ArgumentConfig[]
+  optionalArguments?: ArgumentConfig[]
   listArgument?: ListArgumentConfig
   description?: string
 }
@@ -73,24 +75,30 @@ export type MixOptions<
   } & NewOptions
 >
 
-type ExtractActionArgs<
-  Arguments extends ArgumentConfig[],
-  ListArgument extends ListArgumentConfig | undefined
-> = [
-  ...{
-    [Key in keyof Arguments]: Arguments[Key] extends { type: TPrimitive }
-      ? ExtractTypeOutput<Arguments[Key]['type']>
-      : Arguments[Key] extends { name: string }
-      ? string
-      : never
-  },
+type ExtractActionArgsMain<Arguments extends ArgumentConfig[]> = {
+  [Key in keyof Arguments]: Arguments[Key] extends { type: TPrimitive }
+    ? ExtractTypeOutput<Arguments[Key]['type']>
+    : Arguments[Key] extends { name: string }
+    ? string
+    : never
+}
 
-  ...(ListArgument extends { type: TPrimitive }
+type ExtractActionArgsOptional<Arguments extends ArgumentConfig[]> = {
+  [Key in keyof Arguments]: Arguments[Key] extends { type: TPrimitive }
+    ? ExtractTypeOutput<Arguments[Key]['type']>
+    : Arguments[Key] extends { name: string }
+    ? string
+    : never
+}
+
+type ExtractActionArgsList<ListArgument extends ListArgumentConfig> =
+  ListArgument extends {
+    type: TPrimitive
+  }
     ? ExtractTypeOutput<ListArgument['type']>[]
     : ListArgument extends { name: string }
     ? string[]
-    : [])
-]
+    : never
 
 type ExtractActionOptions<Options extends NoArgOptions['options']> =
   MakeObjectOptional<{
@@ -105,16 +113,26 @@ type ExtractActionOptions<Options extends NoArgOptions['options']> =
   }>
 
 export type Action<
-  TConfig extends Pick<NoArgOptions, 'arguments' | 'options' | 'listArgument'>
+  TConfig extends Pick<
+    NoArgOptions,
+    'arguments' | 'optionalArguments' | 'listArgument' | 'options'
+  >
 > = {
-  (
-    args: ExtractActionArgs<
-      undefined extends TConfig['arguments']
-        ? []
-        : NonNullable<TConfig['arguments']>,
-      TConfig['listArgument']
-    >,
+  (config: {
+    options: undefined extends TConfig['options']
+      ? {}
+      : ExtractActionOptions<TConfig['options']>
 
-    options: ExtractActionOptions<TConfig['options']>
-  ): void
+    args: undefined extends TConfig['arguments']
+      ? never[]
+      : ExtractActionArgsMain<NonNullable<TConfig['arguments']>>
+
+    optArgs: undefined extends TConfig['optionalArguments']
+      ? never[]
+      : ExtractActionArgsOptional<NonNullable<TConfig['optionalArguments']>>
+
+    listArgs: undefined extends TConfig['listArgument']
+      ? never[]
+      : ExtractActionArgsList<NonNullable<TConfig['listArgument']>>
+  }): void
 }

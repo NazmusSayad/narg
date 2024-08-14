@@ -48,12 +48,16 @@ const app = NoArg.create(
   {
     description: 'This is a test program',
     options: {
-      config: t.string().global(),
+      config: t.string().global().ask('Where is the config?'),
     },
     arguments: [
       { name: 'arg-1', type: t.number() },
       { name: 'arg-2', type: t.boolean() },
       { name: 'arg-3' },
+    ],
+    optionalArguments: [
+      { name: 'arg-4', type: t.string() },
+      { name: 'arg-5', type: t.boolean() },
     ],
     listArgument: {
       name: 'args',
@@ -63,8 +67,8 @@ const app = NoArg.create(
     },
     config: {},
   },
-  (args, options) => {
-    console.log({ app: args })
+  ({ options, args, optArgs, listArgs }) => {
+    console.log({ options, args, optArgs, listArgs })
   }
 )
 ```
@@ -72,7 +76,7 @@ const app = NoArg.create(
 ### Example: Command Structure
 
 ```sh
-node app.js arg-1 true arg-3 listArgs-1 listArgs-2 --config config.json
+node app.js arg-1 arg-2 arg-3 optional-arg-1 listArg-1 listArg-2 --config config.json
 ```
 
 #### Types
@@ -86,12 +90,14 @@ node app.js arg-1 true arg-3 listArgs-1 listArgs-2 --config config.json
 ### Tips
 
 - Help option is automatically available.
-- Add `--use` or `-u` option just after `--help` or `-h` option to see how to use it
-  ### Example
-  ```sh
-  node app.js --help --use
-  node app.js -h -u
-  ```
+- Another awesome feature is that it shows how to use this CLI and its structure, which can be seen using the `--help-use` flag.
+
+### Example
+
+```sh
+node app.js --help
+node app.js --help-use
+```
 
 ### Conclusion
 

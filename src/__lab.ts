@@ -8,7 +8,11 @@ const app = NoArg.create(
     description: 'This is a test program',
 
     options: {
-      config: t.string('abc').global().default('abc'),
+      config: t
+        .number()
+        .global()
+        // .ask('Do you want to see the config?')
+        .default(0),
     },
 
     arguments: [
@@ -17,96 +21,103 @@ const app = NoArg.create(
       { name: 'arg-3' },
     ],
 
+    optionalArguments: [{ name: 'super-arg', type: t.string() }],
+
     listArgument: {
       name: 'args',
       type: t.boolean(),
-      minLength: 1,
-      maxLength: 3,
+      minLength: 0,
+      maxLength: 2,
     },
 
     config: { booleanFalsePrefixSuffix: '\\' },
   },
 
-  (args, options) => {
-    console.log({ app: args })
+  (config) => {
+    console.log(config)
   }
 )
 
-const build = app.create(
-  'build',
-  {
-    description: 'Build the package for production',
-    options: {
-      root: t.string().default('.').aliases('r').description('Root directory'),
+// const build = app.create(
+//   'build',
+//   {
+//     description: 'Build the package for production',
+//     options: {
+//       root: t.string().default('.').aliases('r').description('Root directory'),
 
-      module: t.string('cjs').aliases('m').description("Output module's type"),
+//       module: t.string('cjs').aliases('m').description("Output module's type"),
 
-      outDir: t
-        .string()
-        .default('./dist')
-        .aliases('o')
-        .description('Output directory'),
+//       outDir: t
+//         .string()
+//         .default('./dist')
+//         .aliases('o')
+//         .description('Output directory'),
 
-      tsc: t
-        .array(t.string())
-        .aliases('t')
-        .default([])
-        .description("TypeScript's options"),
+//       tsc: t
+//         .array(t.string())
+//         .aliases('t')
+//         .default([])
+//         .description("TypeScript's options"),
 
-      numbers: t.array(t.number()),
-      node: t
-        .boolean()
-        .aliases('n')
-        .default(false)
-        .description('Enable __dirname and __filename in ES modules'),
+//       numbers: t.array(t.number()),
+//       node: t
+//         .boolean()
+//         .aliases('n')
+//         .default(false)
+//         .description('Enable __dirname and __filename in ES modules'),
 
-      test: t
-        .boolean()
-        .aliases('t')
-        .description('Test')
-        .required()
-        .default(true),
-    },
-  },
+//       test: t
+//         .boolean()
+//         .aliases('t')
+//         .description('Test')
+//         .required()
+//         .default(true),
+//     },
+//   },
 
-  (_, options) => {
-    console.log({ options })
-  }
-)
+//   (_, options) => {
+//     console.log({ options })
+//   }
+// )
 
-const deep = build.create('test', {}, (args, options) => {})
+// const deep = build.create('test', {}, (args, options) => {})
 
 // build.renderHelp()
 // app.run(['1', 'yes', '3', 'no', '--help', '--use'])
 
 app.run([
+  '100',
+  'true',
   'build',
 
-  '--root',
-  'npmize-test',
+  'true',
+  'true',
 
-  '--node',
+  // '--root',
+  // 'npmize-test',
+
+  // '--node',
   // '-n',
   // 'NO',
   // 'false',
 
-  '-t',
-  'strict',
-  'noEmit',
+  // '-t',
+  // 'strict',
+  // 'noEmit',
 
-  '-o',
-  'dist',
+  // '-o',
+  // 'dist',
 
-  '-m',
-  'cjs',
+  // '-m',
+  // 'cjs',
 
-  '--numbers=0001',
-  '1',
-  '10',
+  // '--numbers=0001',
+  // '1',
+  // '10',
 
-  '--test\\',
+  // '--test\\',
 
-  '-h',
+  // '-h',
 
-  '-u',
+  '--help-use',
 ])

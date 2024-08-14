@@ -41,6 +41,10 @@ export type CheckUndefined<T extends TypeConfig> = T extends { required: true }
   ? U extends undefined
     ? undefined
     : never
+  : T extends { ask: infer U }
+  ? U extends undefined
+    ? undefined
+    : never
   : undefined
 
 export type ExtractTypeOutput<T> =

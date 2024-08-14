@@ -28,6 +28,7 @@ function renderStructure() {
     '',
     colors.yellow('commands'),
     colors.blue('fixed-arguments'),
+    colors.blue('optional-arguments'),
     colors.green('list-arguments'),
     colors.red('options')
   )
@@ -49,6 +50,13 @@ function renderStructure() {
   console.log(
     '',
     "These are the arguments that you want to pass to the command. Their position and length is fixed and can't be changed."
+  )
+
+  console.log('')
+  printPointHeader(colors.blue('optional-arguments'))
+  console.log(
+    '',
+    'These are the arguments that you want to pass to the command. They are optional and can be changed.'
   )
 
   console.log('')

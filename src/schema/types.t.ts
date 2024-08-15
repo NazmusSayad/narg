@@ -1,21 +1,25 @@
 import {
   TypeArray,
   TypeTuple,
-  TypeBoolean,
   TypeNumber,
   TypeString,
+  TypeBoolean,
 } from './index'
-import { TypeConfig } from '../config-type'
+import { TypeCoreConfig } from './Core'
+
+export type ParsedResult<T, U> = [T, null, true] | [null, U, false]
 
 export type TPrimitive =
-  | TypeString<TypeConfig & Record<string, unknown>>
-  | TypeNumber<TypeConfig & Record<string, unknown>>
-  | TypeBoolean<TypeConfig & Record<string, unknown>>
+  | TypeString<TypeCoreConfig & Record<string, unknown>>
+  | TypeNumber<TypeCoreConfig & Record<string, unknown>>
+  | TypeBoolean<TypeCoreConfig & Record<string, unknown>>
 
 export type TSchema =
   | TPrimitive
-  | TypeArray<TypeConfig & { schema: TPrimitive } & Record<string, unknown>>
-  | TypeTuple<TypeConfig & { schemas: TPrimitive[] } & Record<string, unknown>>
+  | TypeArray<TypeCoreConfig & { schema: TPrimitive } & Record<string, unknown>>
+  | TypeTuple<
+      TypeCoreConfig & { schemas: TPrimitive[] } & Record<string, unknown>
+    >
 
 export type InferTypeAndUpdate<T, TConfig> = T extends TypeString<infer Config>
   ? TypeString<TConfig extends Config ? TConfig : never>
@@ -35,7 +39,9 @@ export type ExtractTypeTupleCore<T extends TPrimitive[]> = {
     : T[K]
 }
 
-export type CheckUndefined<T extends TypeConfig> = T extends { required: true }
+export type CheckUndefined<T extends TypeCoreConfig> = T extends {
+  required: true
+}
   ? never
   : T extends { default: infer U }
   ? U extends undefined

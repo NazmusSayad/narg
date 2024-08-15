@@ -1,10 +1,14 @@
-import NoArg from '../NoArg'
-import { Prettify } from '../utils'
-import { TypeConfig } from '../config-type'
+import {
+  TypeConfig,
+  TPrimitive,
+  ParsedResult,
+  ExtractTypeOutput,
+  InferTypeAndUpdate,
+} from './types.t'
+import { Prettify } from '../types/util.t'
 import { ResultErr, ResultOk } from './result'
-import { ExtractTypeOutput, InferTypeAndUpdate, TPrimitive } from './type.t'
+import verifyOptionName from '../helpers/verify-option-name'
 
-type ParsedResult<T, U> = [T, null, true] | [null, U, false]
 export class TypeCore<TConfig extends TypeConfig> {
   name = 'core'
   constructor(public config: TConfig) {}
@@ -47,7 +51,7 @@ export class TypeCore<TConfig extends TypeConfig> {
     ...aliases: TAliases
   ): InferTypeAndUpdate<SELF, Prettify<TConfig & { aliases: TAliases }>> {
     aliases.forEach((alias) => {
-      NoArg.verifyOptionName('Alias', alias)
+      verifyOptionName('Alias', alias)
     })
 
     this.config.aliases = [...new Set(aliases)].sort(

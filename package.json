@@ -1,22 +1,9 @@
 {
   "name": "noarg",
-  "version": "2.0.0",
-  "dependencies": {
-    "ansi-colors": "^4.1.3",
-    "cli-table3": "^0.6.3",
-    "prompt-sync": "^4.2.0",
-    "readline-sync": "^1.4.10"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.10",
-    "@types/readline-sync": "^1.4.8",
-    "npmize": "^0.0.10",
-    "typescript": "^5.3.3"
-  },
+  "version": "0.0.0",
   "scripts": {
     "dev": "npmize dev",
-    "build": "npmize build",
-    "lab": "w ./src/__lab.ts"
+    "build": "npmize build"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -25,5 +12,9 @@
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     }
+  },
+  "devDependencies": {
+    "npmize": "^0.0.10",
+    "typescript": "^5.5.4"
   }
 }

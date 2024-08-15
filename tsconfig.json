@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "target": "es6",
     "skipLibCheck": true,
     "declaration": true,
     "inlineSourceMap": false,
     "strict": true,
     "pretty": true,
-    "removeComments": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true
+    "removeComments": true
   },
-  "include": ["./src"]
+  "include": [
+    "./src"
+  ]
 }

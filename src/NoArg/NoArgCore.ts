@@ -1,20 +1,25 @@
+import {
+  FlagOption,
+  NoArgProgramMap,
+  ArgumentsOptions,
+  ListArgumentsOption,
+  OptionalArgumentsOptions,
+} from './types.t'
 import verifyFlagName from '../helpers/verify-flag-name'
-import { NoArgOptions, NoArgProgramMap, NoArgSystem } from './types.t'
 
-export default class<
+export class NoArgCore<
   TName extends string,
-  TConfig extends NoArgCoreConfig,
-  TOptions extends NoArgOptions,
-  TSystem extends NoArgSystem
+  TSystem extends NoArgCore.System,
+  TConfig extends NoArgCore.Config,
+  TOptions extends NoArgCore.Options
 > {
   public programs: NoArgProgramMap = new Map()
 
   constructor(
     public name: TName,
+    public system: TSystem,
     public config: TConfig,
-    public options: TOptions,
-    public action: Function,
-    public system: TSystem
+    public options: TOptions
   ) {
     options.flags &&
       Object.keys(options.flags).forEach((name) => {
@@ -26,18 +31,38 @@ export default class<
         verifyFlagName('Flag', name, system.booleanNotSyntaxEnding)
       })
   }
+
+  static defaultOptions = {
+    arguments: [] as [],
+    optionalArguments: [] as [],
+    flags: {},
+    globalFlags: {},
+  } as const
 }
 
-export type NoArgCoreConfig = {
-  disableHelp?: boolean
-  ignoreTrailingArgs?: boolean
-}
+NoArgCore.defaultOptions satisfies NoArgCore.Options
 
-export const defaultNoArgOptions = {
-  arguments: [] as [],
-  optionalArguments: [] as [],
-  flags: {},
-  globalFlags: {},
-}
+export module NoArgCore {
+  export type Config = {
+    disableHelp?: boolean
+    ignoreTrailingArgs?: boolean
+  }
 
-defaultNoArgOptions satisfies NoArgOptions
+  export type Options = {
+    description?: string
+    arguments?: ArgumentsOptions[]
+    optionalArguments?: OptionalArgumentsOptions[]
+    listArgument?: ListArgumentsOption
+    flags?: FlagOption
+    globalFlags?: FlagOption
+  }
+
+  export type System = {
+    equalAssign?: boolean
+    duplicateValue?: boolean
+    duplicateOption?: boolean
+    booleanNotSyntaxEnding?: string
+  }
+
+  export type DefaultOptions = typeof NoArgCore.defaultOptions
+}

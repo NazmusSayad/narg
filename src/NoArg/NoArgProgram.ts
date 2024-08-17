@@ -1,104 +1,103 @@
 import { Prettify, MergeObject } from '../types/util.t'
-import { NoArgOptions, NoArgSystem } from './types.t'
-import { defaultNoArgOptions, NoArgCoreConfig } from './NoArgCore'
-import NoArgParser from './NoArgParser'
+import { NoArgCore } from './NoArgCore'
+import { NoArgParser } from './NoArgParser'
+import { FlagOption } from './types.t'
 
-export default class NoArgProgram<
+export class NoArgProgram<
   TName extends string,
-  TConfig extends NoArgProgramConfig,
-  TOptions extends NoArgOptions,
-  TSystem extends NoArgSystem
-> extends NoArgParser<TName, TConfig, TOptions, TSystem> {
-  renderHelp() {}
-
+  TSystem extends NoArgCore.System,
+  TConfig extends NoArgProgram.Config,
+  TOptions extends NoArgCore.Options
+> extends NoArgParser<TName, TSystem, TConfig, TOptions> {
   public create<
-    TName extends string,
-    TCreateOptionsWithConfig extends NoArgOptions & {
-      config?: NoArgProgramConfig
+    const TName extends string,
+    const TCreateOptionsWithConfig extends NoArgCore.Options & {
+      config?: NoArgProgram.Config
     }
-  >(
-    name: TName,
-    { config, ...options }: TCreateOptionsWithConfig,
-    action: Function
-  ) {
-    if (
-      !config?.skipGlobalFlags &&
-      (options.globalFlags || this.options.globalFlags)
-    ) {
-      options.globalFlags ??= {
-        ...this.options.globalFlags,
-        ...options.globalFlags,
-      }
-    }
-
+  >(name: TName, { config, ...options }: TCreateOptionsWithConfig) {
     config = {
       ...this.config,
       ...config,
     }
 
     options = {
-      ...defaultNoArgOptions,
+      ...NoArgCore.defaultOptions,
       ...options,
     }
 
-    // FIXME:
+    if (!config.skipGlobalFlags) {
+      options.globalFlags ??= {
+        ...this.options.globalFlags,
+        ...options.globalFlags,
+      }
+    }
 
-    // Split Create options into inner options and inner config
-    type TInnerConfig =
-      TCreateOptionsWithConfig['config'] extends NoArgProgramConfig
-        ? TCreateOptionsWithConfig['config']
-        : {}
+    type TInnerConfig = NonNullable<TCreateOptionsWithConfig['config']>
     type TInnerOptions = Omit<
       TCreateOptionsWithConfig,
       'config'
-    > extends NoArgOptions
-      ? Omit<TCreateOptionsWithConfig, 'config'>
+    > extends NoArgCore.Options
+      ? MergeObject<
+          NoArgCore.DefaultOptions,
+          Omit<TCreateOptionsWithConfig, 'config'>
+        >
       : never
 
-    type TParentConfig = Pick<
-      TConfig,
-      Extract<keyof NoArgProgramConfig, keyof TConfig>
-    >
-
-    type TProgramConfig = MergeObject<TParentConfig, TInnerConfig>
-
-    type TCombinedGlobalFlags = TInnerConfig extends NoArgProgramConfig
-      ? TInnerConfig['skipGlobalFlags'] extends true
-        ? TInnerOptions['globalFlags']
-        : Prettify<
-            MergeObject<
-              TOptions['globalFlags'] extends object
-                ? TOptions['globalFlags']
-                : {},
-              TInnerOptions['globalFlags'] extends object
-                ? TInnerOptions['globalFlags']
-                : {}
-            >
+    type TInnerOptionsWithGlobalFlags =
+      TInnerConfig['skipGlobalFlags'] extends true
+        ? TInnerOptions
+        : MergeObject<
+            TInnerOptions,
+            {
+              readonly globalFlags: Prettify<
+                MergeObject<
+                  TOptions['globalFlags'],
+                  TInnerOptions['globalFlags']
+                >
+              >
+            }
           >
-      : never
-
-    type TProgramOptions = Omit<TInnerOptions, 'globalFlags'> &
-      keyof TCombinedGlobalFlags extends never
-      ? {}
-      : { globalFlags: TCombinedGlobalFlags }
 
     const child = new NoArgProgram<
       TName,
-      Prettify<TProgramConfig>,
-      Prettify<
-        Omit<typeof defaultNoArgOptions, keyof TProgramOptions> &
-          TProgramOptions
-      >,
-      TSystem
-    >(name, (config ?? {}) as any, options as any, action, this.system)
+      TSystem,
+      Prettify<MergeObject<TConfig, TInnerConfig>>,
+      Prettify<TInnerOptionsWithGlobalFlags>
+    >(name, this.system, (config ?? {}) as any, options as any)
 
-    this.programs.set(name, child)
+    this.programs.set(name, child as any)
     return child
+  }
+
+  public action?: (...args: any[]) => void
+  public on(callback: NoArgProgram.ExtractAction<TSystem, TConfig, TOptions>) {
+    this.action = callback as any
+    return this
   }
 }
 
-export type NoArgProgramConfig = Prettify<
-  NoArgCoreConfig & {
+export module NoArgProgram {
+  export type Config = NoArgCore.Config & {
     skipGlobalFlags?: boolean
   }
->
+
+  export type ExtractFlags<T extends FlagOption> = Prettify<{
+    [K in keyof T]: T[K]['name']
+  }>
+
+  export type ExtractAction<
+    TSystem extends NoArgCore.System,
+    TConfig extends NoArgProgram.Config,
+    TOptions extends NoArgCore.Options
+  > = (
+    arg: {
+      flags: ExtractFlags<
+        MergeObject<
+          NonNullable<TOptions['flags']>,
+          NonNullable<TOptions['globalFlags']>
+        >
+      >
+    },
+    config: TConfig
+  ) => void
+}

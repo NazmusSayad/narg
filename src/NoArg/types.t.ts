@@ -1,5 +1,6 @@
 import { TSchema, TSchemaPrimitive } from '../schema/type.t'
-import NoArgProgram, { NoArgProgramConfig } from './NoArgProgram'
+import { NoArgCore } from './NoArgCore'
+import { NoArgProgram } from './NoArgProgram'
 
 export type ArgumentsOptions = {
   name: string
@@ -11,28 +12,14 @@ export type OptionalArgumentsOptions = ArgumentsOptions & {
   // Nothing :)
 }
 
-export type ListArgumentsOptions = ArgumentsOptions & {
+export type ListArgumentsOption = ArgumentsOptions & {
   minLength?: number
   maxLength?: number
 }
 
-export type NoArgOptions = {
-  description?: string
-  arguments?: ArgumentsOptions[]
-  optionalArguments?: OptionalArgumentsOptions[]
-  listArgument?: ListArgumentsOptions
-  flags?: Record<string, TSchema>
-  globalFlags?: Record<string, TSchema>
-}
-
-export type NoArgSystem = {
-  equalAssign?: boolean
-  duplicateValue?: boolean
-  duplicateOption?: boolean
-  booleanNotSyntaxEnding?: string
-}
+export type FlagOption = Record<string, TSchema>
 
 export type NoArgProgramMap = Map<
   string,
-  NoArgProgram<string, NoArgProgramConfig, NoArgOptions, NoArgSystem>
+  NoArgProgram<string, NoArgProgram.Config, NoArgCore.Options, NoArgCore.System>
 >

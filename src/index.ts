@@ -1,2 +1,2 @@
-import NoArg from './NoArg/index'
+import NoArg from './NoArg/NoArgRoot'
 export default NoArg

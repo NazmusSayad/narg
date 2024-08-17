@@ -1,4 +1,3 @@
-import { NotReadonly } from '../types/util.t'
 import { TSchemaPrimitive } from './type.t'
 import TypeArray from './TypeArray'
 import { TypeBoolean } from './TypeBoolean'
@@ -35,11 +34,11 @@ export default {
 
   array<T extends TSchemaPrimitive>(schema: T) {
     const config = { schema }
-    return new TypeArray(config as NotReadonly<typeof config>)
+    return new TypeArray(config)
   },
 
   tuple<T extends TSchemaPrimitive[]>(...schema: T) {
     const config = { schema }
-    return new TypeTuple(config as NotReadonly<typeof config>)
+    return new TypeTuple(config)
   },
 }

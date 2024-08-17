@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "ES2020",
     "skipLibCheck": true,
     "declaration": true,
     "inlineSourceMap": false,
@@ -8,7 +8,6 @@
     "pretty": true,
     "removeComments": true
   },
-  "include": [
-    "./src"
-  ]
+  "include": ["./src"],
+  "exclude": ["./src/___lab___"]
 }

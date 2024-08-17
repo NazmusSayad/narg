@@ -3,7 +3,12 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "npmize dev",
-    "build": "npmize build"
+    "build": "npmize build",
+    "lab": "w ./src/___lab___/index.ts"
+  },
+  "devDependencies": {
+    "npmize": "^0.0.10",
+    "typescript": "^5.5.4"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -13,8 +18,17 @@
       "import": "./dist/index.mjs"
     }
   },
-  "devDependencies": {
-    "npmize": "^0.0.10",
-    "typescript": "^5.5.4"
-  }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NazmusSayad/noarg.git"
+  },
+  "keywords": [
+    "noarg",
+    "noargs",
+    "no-arg",
+    "no-args",
+    "node arg",
+    "node args",
+    "node argv"
+  ]
 }

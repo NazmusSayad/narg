@@ -1,7 +1,7 @@
 export default function (
   type: string,
   string: string,
-  booleanFalsePrefixSuffix?: string
+  booleanFalseEnding?: string
 ) {
   if (string.length == 0) {
     throw new Error(`${type} name cannot be empty`)
@@ -15,13 +15,13 @@ export default function (
     throw new Error(`${type} "${string}" should not start with "-"`)
   }
 
-  if (booleanFalsePrefixSuffix && string.includes(booleanFalsePrefixSuffix)) {
-    throw new Error(
-      `${type} "${string}" should not contain "${booleanFalsePrefixSuffix}"`
-    )
-  }
-
   if (string.includes('=')) {
     throw new Error(`${type} "${string}" should not contain "="`)
+  }
+
+  if (booleanFalseEnding && string.endsWith(booleanFalseEnding)) {
+    throw new Error(
+      `${type} "${string}" should not end with "${booleanFalseEnding}"`
+    )
   }
 }

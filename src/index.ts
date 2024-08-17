@@ -1,2 +1,2 @@
-console.log('Hello, world!')
-export default 'Hello, world!'
+import NoArg from './NoArg/index'
+export default NoArg

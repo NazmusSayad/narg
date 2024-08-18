@@ -121,13 +121,7 @@ export class NoArgProgram<
     })(this)
 
     if (this.programs.size) {
-      commandItems.push(
-        this.helpColors.programs(
-          `(${[...this.programs.values()]
-            .map((program) => program.name)
-            .join('|')})`
-        )
-      )
+      commandItems.push(this.helpColors.programs(`(program)`))
     }
 
     this.options.arguments.forEach((argument) => {
@@ -181,64 +175,55 @@ export class NoArgProgram<
 
   private renderHelpArguments() {
     console.log(colors.bold('Arguments:'))
+    const tables = [] as [CellValue, CellValue, CellValue][]
 
-    const argumentData = this.options.arguments.map<
-      [CellValue, CellValue, CellValue]
-    >((argument) => {
+    this.options.arguments.forEach((argument) => {
       const { name, type, description } = argument
-      return [
+      tables.push([
         this.helpColors.arguments(name),
         this.helpColors.type(type?.name ?? 'string'),
         this.helpColors.description(description ?? this.helpColors.emptyString),
-      ]
+      ])
     })
 
-    const optArgumentData = this.options.optionalArguments.map<
-      [CellValue, CellValue, CellValue]
-    >((argument) => {
+    this.options.optionalArguments.forEach((argument) => {
       const { name, type, description } = argument
-      return [
+      tables.push([
         this.helpColors.arguments(name),
         this.helpColors.type(type?.name ?? 'string') + '?',
         this.helpColors.description(description ?? this.helpColors.emptyString),
-      ]
+      ])
     })
 
-    CustomTable([5, 3, 10], ...(argumentData ?? []), ...(optArgumentData ?? []))
-  }
+    if (this.options.listArgument) {
+      const { name, type, description, minLength, maxLength } =
+        this.options.listArgument
 
-  private renderHelpListArgument() {
-    const { name, type, minLength, maxLength } = this.options.listArgument!
-    console.log(
-      colors.bold('List Argument: ') + this.helpColors.arguments(name)
-    )
-    console.log('', colors.black('----------------'))
+      const hasMinLength = minLength !== undefined
+      const hasMaxLength = maxLength !== undefined
+      let minMaxLengthStr = ''
+      if (hasMinLength || hasMaxLength) {
+        minMaxLengthStr += '\n'
 
-    console.log(
-      '',
-      'Argument Type  :',
-      this.helpColors.type(type?.name ?? 'string')
-    )
+        if (hasMinLength) {
+          minMaxLengthStr += 'Min: ' + colors.yellow(String(minLength))
+        }
 
-    minLength &&
-      console.log(
-        '',
-        'Minimum length :',
-        `Enter at least ${colors.yellow(String(minLength))} ${
-          minLength < 2 ? 'item' : 'items'
-        }`
-      )
+        minMaxLengthStr += '\n'
 
-    maxLength != null &&
-      console.log(
-        '',
-        'Maximum length :',
-        `Enter upto ${colors.yellow(String(maxLength))} ${
-          maxLength < 2 ? 'item' : 'items'
-        }`
-      )
-    ;(!minLength || minLength < 1) &&
-      console.log('', colors.dim('Tips: You can also leave it empty'))
+        if (hasMaxLength) {
+          minMaxLengthStr += 'Max: ' + colors.yellow(String(maxLength))
+        }
+      }
+
+      tables.push([
+        this.helpColors.arguments(name),
+        this.helpColors.type(type?.name ?? 'string') + '[]' + minMaxLengthStr,
+        this.helpColors.description(description ?? this.helpColors.emptyString),
+      ])
+    }
+
+    CustomTable([5, 3, 10], ...tables)
   }
 
   private renderHelpFlags(title: string, flags: FlagOption) {
@@ -304,11 +289,6 @@ export class NoArgProgram<
       this.options.optionalArguments.length
     ) {
       this.renderHelpArguments()
-      console.log('')
-    }
-
-    if (this.options.listArgument) {
-      this.renderHelpListArgument()
       console.log('')
     }
 

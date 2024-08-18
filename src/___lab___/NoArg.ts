@@ -19,7 +19,7 @@ const app = NoArgRoot.create('app', {
   system: {
     booleanNotSyntaxEnding: '!',
   },
-  listArgument: { name: 'test' },
+  listArgument: { name: 'test', minLength: 2, maxLength: 3 },
 }).on((args, flags) => {
   console.log(args, flags)
 })
@@ -61,7 +61,8 @@ const superInner = inner
     console.log(args, flags)
   })
 
-app.usage()
+app.help()
+// app.usage()
 // inner.help()
 // superInner.help()
 

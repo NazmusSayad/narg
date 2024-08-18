@@ -6,7 +6,6 @@ import {
   OptionalArgumentsOptions,
 } from './types.t'
 import verifyFlagName from '../helpers/verify-flag-name'
-import { MergeObject } from '../types/util.t'
 
 export class NoArgCore<
   TName extends string,
@@ -24,12 +23,12 @@ export class NoArgCore<
   ) {
     options.flags &&
       Object.keys(options.flags).forEach((name) => {
-        verifyFlagName('Flag', name, system.booleanNotSyntaxEnding)
+        verifyFlagName('Flag', name, system?.booleanNotSyntaxEnding)
       })
 
     options.globalFlags &&
       Object.keys(options.globalFlags).forEach((name) => {
-        verifyFlagName('Flag', name, system.booleanNotSyntaxEnding)
+        verifyFlagName('Flag', name, system?.booleanNotSyntaxEnding)
       })
   }
 
@@ -60,11 +59,16 @@ export module NoArgCore {
   }
 
   export type System = {
-    equalAssign?: boolean
-    duplicateValue?: boolean
-    duplicateOption?: boolean
-    booleanNotSyntaxEnding?: string
+    equalAssign: boolean
+    booleanNotSyntaxEnding: string
   }
+
+  export const defaultSystem = {
+    equalAssign: true,
+    booleanNotSyntaxEnding: '--',
+  } as const
+
+  export type DefaultSystem = typeof defaultSystem
 
   export type DefaultOptions = typeof NoArgCore.defaultOptions
 }

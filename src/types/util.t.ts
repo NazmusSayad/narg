@@ -9,3 +9,5 @@ export type MakeObjectOptional<T> = {
 } & {
   [Key in keyof T as undefined extends T[Key] ? Key : never]?: T[Key]
 }
+
+export type ReallyRequired<T> = { [P in keyof T]-?: Exclude<T[P], undefined> }

@@ -1,6 +1,6 @@
 import adminSymbol from './admin-symbol'
 import { NoArgProgram } from './NoArgProgram'
-import { MergeObject, Prettify } from '../types/util.t'
+import { MergeObject, Prettify, ReallyRequired } from '../types/util.t'
 import { NoArgCore } from './NoArgCore'
 
 export class NoArgRoot<
@@ -30,30 +30,44 @@ export class NoArgRoot<
     const TCreateConfig extends Prettify<
       Partial<NoArgCore.Options> & {
         config?: NoArgCore.Config
-        system?: NoArgCore.System
+        system?: Partial<NoArgCore.System>
       }
     >
   >(name: TName, { config, system, ...options }: TCreateConfig) {
+    system = { ...NoArgCore.defaultSystem, ...system }
+    config = { ...config }
+
+    type TSystem = MergeObject<
+      NoArgCore.DefaultSystem,
+      Required<NonNullable<TCreateConfig['system']>>
+    >
+
     type TOptions = MergeObject<
       NoArgCore.DefaultOptions,
       Omit<TCreateConfig, 'config' | 'system'>
     >
 
     type TConfig = NonNullable<TCreateConfig['config']>
-    type TSystem = NonNullable<TCreateConfig['system']>
-
     return new NoArgRoot<
       TName,
       Prettify<TSystem>,
       Prettify<TConfig>,
       Prettify<Required<TOptions>>
-    >(adminSymbol, name, system as any, config ?? ({} as any), {
-      ...NoArgCore.defaultOptions,
-      ...options,
-    } as any)
+    >(
+      adminSymbol,
+      name,
+      system as any,
+      config as any,
+      {
+        ...NoArgCore.defaultOptions,
+        ...options,
+      } as any
+    )
   }
 
   public run(argv?: string[]) {
     return this.action?.(argv as any)
   }
 }
+
+export module NoArgRoot {}

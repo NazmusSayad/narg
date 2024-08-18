@@ -89,7 +89,7 @@ export class NoArgProgram<
       TSystem,
       Prettify<MergeObject<TConfig, TInnerConfig>>,
       Prettify<Required<TInnerOptionsWithGlobalFlags>>
-    >(name, this.system, (config ?? {}) as any, options as any, this)
+    >(name, this.system, config as any, options as any, this)
 
     this.programs.set(name, child as any)
     return child
@@ -321,6 +321,163 @@ export class NoArgProgram<
 
       console.log('')
     }
+  }
+
+  private renderUsageUtils = {
+    printValid(...args: string[]) {
+      console.log('  ', colors.green('✔   ' + args.join(' ')))
+    },
+
+    printInvalid(...args: string[]) {
+      console.log('  ', colors.red('✖   ' + args.join(' ')))
+    },
+
+    printGroupHeader(...args: string[]) {
+      console.log(' ⚙︎', colors.black(args.join(' ')))
+    },
+
+    printPointHeader(...args: string[]) {
+      console.log(' -', colors.black(args.join(' ')))
+    },
+
+    tableGroup(name: string, result: string, ...args: string[]) {
+      return [name, args.join('\n'), result] as any
+    },
+  }
+
+  private renderUsageStructure() {
+    console.log(
+      colors.green('$'),
+      this.helpColors.programs('programs'),
+      this.helpColors.arguments('fixed-arguments'),
+      this.helpColors.arguments('optional-arguments'),
+      this.helpColors.arguments('list-arguments'),
+      this.helpColors.flags('flags')
+    )
+
+    console.log(
+      '',
+      "This is the structure of the command line. It's the order of the arguments and options that you want to pass to the command. The order is important and can't be changed."
+    )
+
+    console.log('')
+    this.renderUsageUtils.printPointHeader(colors.yellow('programs'))
+    console.log(
+      '',
+      "This is the command that you want to run. It's the first argument of the command line."
+    )
+
+    console.log('')
+    this.renderUsageUtils.printPointHeader(colors.blue('fixed-arguments'))
+    console.log(
+      '',
+      "These are the arguments that you want to pass to the command. Their position and length is fixed and can't be changed."
+    )
+
+    console.log('')
+    this.renderUsageUtils.printPointHeader(colors.blue('optional-arguments'))
+    console.log(
+      '',
+      'These are the arguments that you want to pass to the command. They are optional and can be changed.'
+    )
+
+    console.log('')
+    this.renderUsageUtils.printPointHeader(colors.green('list-arguments'))
+    console.log(
+      '',
+      'These are the arguments that you want to pass to the command. They are list of values and length can vary on configuration. They also can be optional.'
+    )
+
+    console.log('')
+    this.renderUsageUtils.printPointHeader(colors.red('flags'))
+    console.log(
+      '',
+      'These are the options that you want to pass to the command. They are optional and can be changed.'
+    )
+  }
+
+  private renderUsageHowToUseOptions() {
+    CustomTable(
+      [1, 3, 2],
+      this.renderUsageUtils.tableGroup(
+        'string',
+        'string',
+        '--string string',
+        '--string=string'
+      ),
+
+      this.renderUsageUtils.tableGroup(
+        'number',
+        '100',
+        '--number 100',
+        '--number=100'
+      ),
+
+      this.renderUsageUtils.tableGroup(
+        'boolean\n(true)',
+        'true',
+        '--boolean',
+        '--boolean true',
+        '--boolean=true',
+        '--boolean yes',
+        '--boolean=yes',
+        colors.black("* Casing doesn't matter"),
+        '--boolean YeS'
+      ),
+
+      this.renderUsageUtils.tableGroup(
+        'boolean\n(false)',
+        'false',
+        '--boolean' + this.system.booleanNotSyntaxEnding,
+        '--boolean false',
+        '--boolean=false',
+        '--boolean no',
+        '--boolean=no',
+        colors.black("* Casing doesn't matter"),
+        '--boolean fAlSe'
+      ),
+
+      this.renderUsageUtils.tableGroup(
+        'array\ntuple',
+        "['value1', 'value2']",
+        '--option value1 value2',
+        '--option=value1 value2'
+      )
+    )
+  }
+
+  private renderUsageConfiguration() {
+    if (this.system.equalAssign) {
+      this.renderUsageUtils.printGroupHeader(
+        'Options with equal value is enabled'
+      )
+      this.renderUsageUtils.printValid(colors.yellow('--option'), 'value')
+      this.renderUsageUtils.printValid(
+        colors.yellow('--option') + colors.blue('=') + 'value'
+      )
+    } else {
+      this.renderUsageUtils.printGroupHeader(
+        'Options with equal value is disabled'
+      )
+      this.renderUsageUtils.printValid(colors.yellow('--option'), 'value')
+      this.renderUsageUtils.printInvalid(
+        colors.yellow('--option') + colors.blue('=') + 'value'
+      )
+    }
+  }
+
+  public usage() {
+    console.log(colors.bold(colors.cyan('📝 Structure:')))
+    this.renderUsageStructure()
+    console.log('')
+
+    console.log(colors.bold(colors.cyan('📝 How to use:')))
+    this.renderUsageHowToUseOptions()
+    console.log('')
+
+    console.log(colors.bold(colors.cyan('📝 Configuration:')))
+    this.renderUsageConfiguration()
+    console.log('')
   }
 }
 

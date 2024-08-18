@@ -17,7 +17,7 @@ const app = NoArgRoot.create('app', {
   arguments: [{ name: 'root' }],
   optionalArguments: [{ name: 'nope', type: schema.number() }],
   system: {
-    booleanNotSyntaxEnding: '--',
+    booleanNotSyntaxEnding: '!',
   },
   listArgument: { name: 'test' },
 }).on((args, flags) => {
@@ -61,6 +61,27 @@ const superInner = inner
     console.log(args, flags)
   })
 
-app.help()
+app.usage()
 // inner.help()
 // superInner.help()
+
+const gitApp = NoArgRoot.create('git', {
+  flags: { quiet: schema.string() },
+}).on((args, flags) => {
+  console.log(args, flags)
+})
+
+const gitClone = gitApp
+  .create('clone', {
+    description: 'Clone a repository into a new directory',
+
+    arguments: [
+      {
+        name: 'url',
+        type: schema.string(),
+        description: 'The url to clone from',
+      },
+    ],
+    flags: { force: schema.boolean().description('Do something...') },
+  })
+  .on((args, flags) => {})

@@ -1,2 +1,2 @@
-import { NoArg } from './NoArgRoot'
-export default NoArg
+import { NoArgRoot } from './NoArgRoot'
+export default NoArgRoot

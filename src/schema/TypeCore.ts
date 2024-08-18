@@ -1,4 +1,4 @@
-import { Prettify } from '../types/util.t'
+import { MergeObject, Prettify } from '../types/util.t'
 import { ResultErr, ResultOk } from './result'
 import verifyOptionName from '../helpers/verify-flag-name'
 import { ParsedResult, ExtractTypeOutput, InferAndUpdateConfig } from './type.t'
@@ -31,21 +31,30 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
 
   default<TDefault extends ExtractTypeOutput<SELF>, SELF = typeof this>(
     value: TDefault
-  ): InferAndUpdateConfig<SELF, Prettify<TConfig & { default: TDefault }>> {
+  ): InferAndUpdateConfig<
+    SELF,
+    Prettify<MergeObject<TConfig, { default: TDefault }>>
+  > {
     this.config.default = value
     return this as any
   }
 
   ask<TDefault extends string, SELF = typeof this>(
     question?: TDefault
-  ): InferAndUpdateConfig<SELF, Prettify<TConfig & { ask: TDefault }>> {
+  ): InferAndUpdateConfig<
+    SELF,
+    Prettify<MergeObject<TConfig, { ask: TDefault }>>
+  > {
     this.config.ask = question ?? 'Enter a value:'
     return this as any
   }
 
   aliases<TAliases extends string[], SELF = typeof this>(
     ...aliases: TAliases
-  ): InferAndUpdateConfig<SELF, Prettify<TConfig & { aliases: TAliases }>> {
+  ): InferAndUpdateConfig<
+    SELF,
+    Prettify<MergeObject<TConfig, { aliases: TAliases }>>
+  > {
     aliases.forEach((alias) => {
       verifyOptionName('Alias', alias)
     })
@@ -59,17 +68,9 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
 
   required<SELF = typeof this>(): InferAndUpdateConfig<
     SELF,
-    Prettify<TConfig & { required: true }>
+    Prettify<MergeObject<TConfig, { required: true }>>
   > {
     this.config.required = true
-    return this as any
-  }
-
-  optional<SELF = typeof this>(): InferAndUpdateConfig<
-    SELF,
-    Prettify<TConfig & { required: false }>
-  > {
-    this.config.required = false
     return this as any
   }
 
@@ -77,7 +78,7 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
     description: TDescription
   ): InferAndUpdateConfig<
     SELF,
-    Prettify<TConfig & { description: TDescription }>
+    Prettify<MergeObject<TConfig, { description: TDescription }>>
   > {
     this.config.description = description
     return this as any

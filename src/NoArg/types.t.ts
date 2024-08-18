@@ -21,5 +21,5 @@ export type FlagOption = Record<string, TSchema>
 
 export type NoArgProgramMap = Map<
   string,
-  NoArgProgram<string, NoArgProgram.Config, NoArgCore.Options, NoArgCore.System>
+  NoArgProgram<string, NoArgCore.System, NoArgProgram.Config, NoArgCore.Options>
 >

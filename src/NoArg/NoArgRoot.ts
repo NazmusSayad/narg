@@ -3,7 +3,7 @@ import { NoArgProgram } from './NoArgProgram'
 import { MergeObject, Prettify } from '../types/util.t'
 import { NoArgCore } from './NoArgCore'
 
-export class NoArg<
+export class NoArgRoot<
   TName extends string,
   TSystem extends NoArgCore.System,
   TConfig extends NoArgProgram.Config,
@@ -12,9 +12,9 @@ export class NoArg<
   constructor(
     symbol: symbol,
     name: TName,
+    system: TSystem,
     config: TConfig,
-    options: TOptions,
-    system: TSystem
+    options: TOptions
   ) {
     if (symbol !== adminSymbol) {
       throw new Error(
@@ -28,7 +28,7 @@ export class NoArg<
   static create<
     const TName extends string,
     const TCreateConfig extends Prettify<
-      NoArgCore.Options & {
+      Partial<NoArgCore.Options> & {
         config?: NoArgCore.Config
         system?: NoArgCore.System
       }
@@ -42,11 +42,11 @@ export class NoArg<
     type TConfig = NonNullable<TCreateConfig['config']>
     type TSystem = NonNullable<TCreateConfig['system']>
 
-    return new NoArg<
+    return new NoArgRoot<
       TName,
       Prettify<TSystem>,
       Prettify<TConfig>,
-      Prettify<TOptions>
+      Prettify<Required<TOptions>>
     >(adminSymbol, name, system as any, config ?? ({} as any), {
       ...NoArgCore.defaultOptions,
       ...options,

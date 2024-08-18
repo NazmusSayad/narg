@@ -42,7 +42,7 @@ export type ExtractTypeTupleCore<T extends TSchemaPrimitive[]> = {
     : T[K]
 }
 
-export type CheckUndefined<T extends TypeCoreConfig> = T extends {
+export type ExtractTypeUndefined<T extends TypeCoreConfig> = T extends {
   required: true
 }
   ? never
@@ -59,13 +59,13 @@ export type CheckUndefined<T extends TypeCoreConfig> = T extends {
 export type ExtractTypeOutput<T> =
   // Extract String
   T extends TypeString<infer Config>
-    ? Config['enum'] extends string[]
-      ? Config['enum'][number]
+    ? Config['enum'] extends Set<infer TStrEnum>
+      ? TStrEnum
       : string
     : // Extract Number
     T extends TypeNumber<infer Config>
-    ? Config['enum'] extends number[]
-      ? Config['enum'][number]
+    ? Config['enum'] extends Set<infer TStrNum>
+      ? TStrNum
       : number
     : // Extract Boolean
     T extends TypeBoolean<infer Config>

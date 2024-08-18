@@ -1,36 +1,66 @@
-import NoArg from '../NoArg'
-import schema from '../schema'
+import NoArgRoot from '../NoArg/index'
+import schema from '../schema/index'
 
-const app = NoArg.create('app', {
+const app = NoArgRoot.create('app', {
   description: 'This is an app',
-  flags: { test: schema.string() },
+  flags: {
+    zzzz: schema.string(),
+    test: schema.string().required(),
+    test2: schema.string().required(),
+    sql: schema.string().required(),
+    sql2: schema.string().required(),
+    sup: schema.string(),
+    abc: schema.string().required().ask("What's your name?"),
+  },
   globalFlags: { silent: schema.string() },
   config: { disableHelp: true },
-  arguments: [{ name: 'testsdf' }],
+  arguments: [{ name: 'root' }],
+  optionalArguments: [{ name: 'nope', type: schema.number() }],
   system: {
     booleanNotSyntaxEnding: '--',
   },
   listArgument: { name: 'test' },
-}).on((setup) => {
-  console.log(setup.flags)
+}).on((args, flags) => {
+  console.log(args, flags)
 })
 
-const inner = app.create('inner', {
-  config: { disableHelp: false, skipGlobalFlags: true },
-  arguments: [{ name: 'testsdf' }],
-  listArgument: { name: 'test' },
-  globalFlags: { test: schema.string() },
-})
+// app.help()
 
-app.options.arguments
-inner.options.globalFlags
+const inner = app
+  .create('inner', {
+    description: 'This is an inner for app',
+    config: { disableHelp: false, skipGlobalFlags: true },
+    arguments: [{ name: 'testsdf' }],
+    listArgument: { name: 'test', type: schema.number() },
+    globalFlags: { test: schema.string('boom', 'super') },
+  })
+  .on((args, flags) => {
+    console.log(args, flags)
+  })
+
+const inner2 = app
+  .create('inner2', {
+    config: { disableHelp: false, skipGlobalFlags: true },
+    arguments: [{ name: 'testsdf' }],
+    listArgument: { name: 'test', type: schema.number() },
+    globalFlags: { test: schema.string('boom', 'super') },
+  })
+  .on((args, flags) => {
+    console.log(args, flags)
+  })
 
 const superInner = inner
   .create('superInner', {
+    arguments: [{ name: 'joss', type: schema.number() }],
+    optionalArguments: [{ name: 'nope', type: schema.number() }],
     config: { disableHelp: false, skipGlobalFlags: false },
   })
-  .on((setup) => {
-    console.log(setup.flags.test)
+  .on((args, flags) => {
+    console.log(args, flags)
+    console.log(args, flags)
+    console.log(args, flags)
   })
 
-console.log(superInner.options.globalFlags)
+app.help()
+// inner.help()
+// superInner.help()

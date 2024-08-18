@@ -6,6 +6,7 @@ import {
   OptionalArgumentsOptions,
 } from './types.t'
 import verifyFlagName from '../helpers/verify-flag-name'
+import { MergeObject } from '../types/util.t'
 
 export class NoArgCore<
   TName extends string,
@@ -45,16 +46,17 @@ NoArgCore.defaultOptions satisfies NoArgCore.Options
 export module NoArgCore {
   export type Config = {
     disableHelp?: boolean
+    disableUsage?: boolean
     ignoreTrailingArgs?: boolean
   }
 
   export type Options = {
     description?: string
-    arguments?: ArgumentsOptions[]
-    optionalArguments?: OptionalArgumentsOptions[]
+    arguments: ArgumentsOptions[]
+    optionalArguments: OptionalArgumentsOptions[]
     listArgument?: ListArgumentsOption
-    flags?: FlagOption
-    globalFlags?: FlagOption
+    flags: FlagOption
+    globalFlags: FlagOption
   }
 
   export type System = {

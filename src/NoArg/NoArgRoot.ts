@@ -1,6 +1,6 @@
 import adminSymbol from './admin-symbol'
 import { NoArgProgram } from './NoArgProgram'
-import { MergeObject, Prettify, ReallyRequired } from '../types/util.t'
+import { MergeObject, Prettify } from '../types/util.t'
 import { NoArgCore } from './NoArgCore'
 
 export class NoArgRoot<
@@ -65,8 +65,8 @@ export class NoArgRoot<
     )
   }
 
-  public run(argv?: string[]) {
-    return this.action?.(argv as any)
+  public start(args: string[] = process.argv.slice(2)) {
+    return this.startCore(args)
   }
 }
 

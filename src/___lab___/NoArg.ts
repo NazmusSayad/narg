@@ -1,5 +1,11 @@
+import colors from '../lib/colors'
 import NoArgRoot from '../NoArg/index'
 import schema from '../schema/index'
+
+function callback(args: any, flags: any) {
+  console.log(colors.green('-----------------'))
+  console.log({ args, flags })
+}
 
 const app = NoArgRoot.create('app', {
   description: 'This is an app',
@@ -10,9 +16,11 @@ const app = NoArgRoot.create('app', {
     sql: schema.string().required(),
     sql2: schema.string().required(),
     sup: schema.string(),
-    abc: schema.string().required().ask("What's your name?"),
   },
-  globalFlags: { silent: schema.string() },
+  globalFlags: {
+    silent: schema.string().default('false'),
+    files: schema.array(schema.string()).required(),
+  },
   config: { disableHelp: true },
   arguments: [{ name: 'root' }],
   optionalArguments: [{ name: 'nope', type: schema.number() }],
@@ -20,69 +28,62 @@ const app = NoArgRoot.create('app', {
     booleanNotSyntaxEnding: '!',
   },
   listArgument: { name: 'test', minLength: 2, maxLength: 3 },
-}).on((args, flags) => {
-  console.log(args, flags)
-})
-
-// app.help()
+}).on(callback)
 
 const inner = app
   .create('inner', {
     description: 'This is an inner for app',
-    config: { disableHelp: false, skipGlobalFlags: true },
+    config: { disableHelp: false },
     arguments: [{ name: 'testsdf' }],
     listArgument: { name: 'test', type: schema.number() },
-    globalFlags: { test: schema.string('boom', 'super') },
   })
-  .on((args, flags) => {
-    console.log(args, flags)
+  .on((result) => {
+    console.log({ result })
   })
 
 const inner2 = app
   .create('inner2', {
-    config: { disableHelp: false, skipGlobalFlags: true },
+    config: { disableHelp: false },
     arguments: [{ name: 'testsdf' }],
     listArgument: { name: 'test', type: schema.number() },
-    globalFlags: { test: schema.string('boom', 'super') },
   })
-  .on((args, flags) => {
-    console.log(args, flags)
-  })
+  .on(callback)
 
 const superInner = inner
   .create('superInner', {
     arguments: [{ name: 'joss', type: schema.number() }],
     optionalArguments: [{ name: 'nope', type: schema.number() }],
-    config: { disableHelp: false, skipGlobalFlags: false },
+    listArgument: { name: 'test', type: schema.string() },
+    config: { disableHelp: false },
   })
   .on((args, flags) => {
-    console.log(args, flags)
-    console.log(args, flags)
-    console.log(args, flags)
+    console.log(args)
+    console.log(flags)
   })
 
-app.help()
-// app.usage()
-// inner.help()
-// superInner.help()
+type abc = (typeof inner)['on']
 
-const gitApp = NoArgRoot.create('git', {
-  flags: { quiet: schema.string() },
-}).on((args, flags) => {
-  console.log(args, flags)
-})
-
-const gitClone = gitApp
-  .create('clone', {
-    description: 'Clone a repository into a new directory',
-
-    arguments: [
-      {
-        name: 'url',
-        type: schema.string(),
-        description: 'The url to clone from',
-      },
-    ],
-    flags: { force: schema.boolean().description('Do something...') },
-  })
-  .on((args, flags) => {})
+app.start([
+  'inner',
+  'superInner',
+  '100',
+  // '1',
+  // '2',
+  // '3',
+  // '4',
+  // '5',
+  // '6',
+  // '7',
+  // '8',
+  // '9',
+  '--silent',
+  'test',
+  '--files',
+  'hello',
+  'world',
+  '--files',
+  'super',
+  '--files',
+  'array',
+  // '-h',
+])

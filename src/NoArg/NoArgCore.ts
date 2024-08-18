@@ -13,13 +13,13 @@ export class NoArgCore<
   TConfig extends NoArgCore.Config,
   TOptions extends NoArgCore.Options
 > {
-  public programs: NoArgProgramMap = new Map()
+  protected programs: NoArgProgramMap = new Map()
 
   constructor(
-    public name: TName,
-    public system: TSystem,
-    public config: TConfig,
-    public options: TOptions
+    protected name: TName,
+    protected system: TSystem,
+    protected config: TConfig,
+    protected options: TOptions
   ) {
     options.flags &&
       Object.keys(options.flags).forEach((name) => {
@@ -31,13 +31,6 @@ export class NoArgCore<
         verifyFlagName('Flag', name, system?.booleanNotSyntaxEnding)
       })
   }
-
-  static defaultOptions = {
-    arguments: [] as [],
-    optionalArguments: [] as [],
-    flags: {},
-    globalFlags: {},
-  } as const
 }
 
 NoArgCore.defaultOptions satisfies NoArgCore.Options
@@ -57,6 +50,13 @@ export module NoArgCore {
     flags: FlagOption
     globalFlags: FlagOption
   }
+
+  export const defaultOptions = {
+    arguments: [] as [],
+    optionalArguments: [] as [],
+    flags: {},
+    globalFlags: {},
+  } as const
 
   export type System = {
     equalAssign: boolean

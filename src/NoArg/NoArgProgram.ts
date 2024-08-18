@@ -15,6 +15,7 @@ import { NoArgCore } from './NoArgCore'
 import { CustomTable } from '../lib/table'
 import { NoArgParser } from './NoArgParser'
 import { Prettify, MergeObject, MakeObjectOptional } from '../types/util.t'
+import { NoArgError } from './NoArgError'
 
 export class NoArgProgram<
   TName extends string,
@@ -22,7 +23,7 @@ export class NoArgProgram<
   TConfig extends NoArgProgram.Config,
   TOptions extends NoArgCore.Options
 > extends NoArgParser<TName, TSystem, TConfig, TOptions> {
-  parent?: NoArgProgram<any, any, any, any>
+  protected parent?: NoArgProgram<any, any, any, any>
 
   constructor(
     name: TName,
@@ -52,7 +53,7 @@ export class NoArgProgram<
     }
 
     if (!config.skipGlobalFlags) {
-      options.globalFlags ??= {
+      options.globalFlags = {
         ...this.options.globalFlags,
         ...(options.globalFlags as any),
       }
@@ -95,10 +96,31 @@ export class NoArgProgram<
     return child
   }
 
-  public action?: (...args: any[]) => void
-  public on(callback: NoArgProgram.ExtractAction<TSystem, TConfig, TOptions>) {
+  protected action?: NoArgProgram.ExtractAction<TSystem, TConfig, TOptions>
+  public on(callback: NonNullable<typeof this.action>) {
     this.action = callback as any
     return this
+  }
+
+  public startCore(args: string[]) {
+    try {
+      const result = this.parseStart(args)
+      if (!result) return
+
+      const output = [
+        [...result.args, ...result.optArgs, result.listArgs],
+        result.flags,
+        this.config,
+      ] as Parameters<NonNullable<typeof this.action>>
+
+      this.action?.(...output)
+      return output
+    } catch (error) {
+      if (error instanceof NoArgError) {
+        console.error(colors.red('Error:'), `${error.message}`)
+        return process.exit(1)
+      } else throw error
+    }
   }
 
   private helpColors = {
@@ -226,9 +248,7 @@ export class NoArgProgram<
     CustomTable([5, 3, 10], ...tables)
   }
 
-  private renderHelpFlags(title: string, flags: FlagOption) {
-    title && console.log(colors.bold(title))
-
+  private renderHelpFlags(flags: FlagOption) {
     const optionData = Object.entries(flags)
       .sort(([keyA], [keyB]) => {
         if (keyA > keyB) return 1
@@ -275,7 +295,7 @@ export class NoArgProgram<
     CustomTable([5, 3, 10], ...optionData)
   }
 
-  public help() {
+  public renderHelp() {
     this.renderHelpOverview()
     console.log('')
 
@@ -296,8 +316,10 @@ export class NoArgProgram<
     const hasGlobalFlags = Object.keys(this.options.globalFlags).length
 
     if (hasFlags || hasGlobalFlags) {
-      hasFlags && this.renderHelpFlags('Flags:', this.options.flags)
-      hasGlobalFlags && this.renderHelpFlags('', this.options.globalFlags)
+      console.log(colors.bold('Flags:'))
+
+      hasFlags && this.renderHelpFlags(this.options.flags)
+      hasGlobalFlags && this.renderHelpFlags(this.options.globalFlags)
 
       console.log('')
     }
@@ -446,7 +468,7 @@ export class NoArgProgram<
     }
   }
 
-  public usage() {
+  public renderUsage() {
     console.log(colors.bold(colors.cyan('📝 Structure:')))
     this.renderUsageStructure()
     console.log('')
@@ -472,8 +494,9 @@ export module NoArgProgram {
       : string
   }
 
-  export type ExtractOptionalArguments<T extends OptionalArgumentsOptions[]> =
-    Partial<ExtractArguments<T>>
+  export type ExtractOptionalArguments<T extends OptionalArgumentsOptions[]> = Partial<
+    ExtractArguments<T>
+  >
 
   export type ExtractListArgument<T extends ListArgumentsOption> =
     T['type'] extends TSchemaPrimitive

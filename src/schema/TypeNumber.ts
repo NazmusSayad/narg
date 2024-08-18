@@ -15,6 +15,8 @@ export default class TypeNumber<
   name = 'number' as const
 
   checkType(value: string) {
+    if (value === '') return new ResultErr(`Number can not be empty string`)
+
     const number = Number(value.trim())
 
     if (isNaN(number)) return new ResultErr(`"${value}" is not a valid number`)

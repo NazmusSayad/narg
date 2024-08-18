@@ -5,16 +5,19 @@
     "dev": "npmize dev",
     "build": "npmize build",
     "lab": "w ./src/___lab___/index.ts",
-    "cjs": "n ./dist/___lab___/index.cjs",
-    "mjs": "n ./dist/___lab___/index.mjs"
+    "js": "nw ./dist/___lab___/index.js",
+    "cjs": "nw ./dist/___lab___/index.cjs",
+    "mjs": "nw ./dist/___lab___/index.mjs"
   },
   "dependencies": {
     "ansi-colors": "^4.1.3",
-    "cli-table3": "^0.6.5"
+    "cli-table3": "^0.6.5",
+    "readline-sync": "^1.4.10"
   },
   "devDependencies": {
     "@types/cli-color": "^2.0.6",
     "@types/node": "^22.4.0",
+    "@types/readline-sync": "^1.4.8",
     "colors-cli": "^1.0.33",
     "npmize": "^0.0.10",
     "typescript": "^5.5.4"

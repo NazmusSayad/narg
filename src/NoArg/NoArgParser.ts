@@ -142,8 +142,13 @@ export class NoArgParser<
 
     if (key) {
       const hasValue = NoArgParser.optionWithValueRegexp.test(key)
-
       if (hasValue) {
+        if (!this.system.allowEqualAssign) {
+          throw new NoArgError(
+            `Equal assignment is not allowed ${colors.red(arg)}`
+          )
+        }
+
         const { value: _value = null, key: _key = null } =
           key.match(NoArgParser.optionWithValueRegexp)?.groups ?? {}
 
@@ -180,6 +185,7 @@ export class NoArgParser<
     }
 
     let currentOptionKey: string = record.raw
+    let mustNeedValue: boolean = false
     const output: Record<
       string,
       Prettify<
@@ -192,6 +198,13 @@ export class NoArgParser<
     > = {}
 
     function checkRecord(record: NoArgParser.ParsedFlagRecord) {
+      if (mustNeedValue) {
+        mustNeedValue = false
+        throw new NoArgError(
+          `No value given for option: ${colors.red(record.raw)}`
+        )
+      }
+
       if (record.key) {
         try {
           verifyFlagName(
@@ -209,13 +222,20 @@ export class NoArgParser<
       if (record.optionType) {
         const [key, schema] = self.findFlagInSchema(record)
         currentOptionKey = key
+        console.log(record)
 
         if (output[currentOptionKey]) {
           if (
-            output[currentOptionKey].schema instanceof TypeArray ||
-            output[currentOptionKey].schema instanceof TypeTuple
+            self.system.allowDuplicateFlagForList &&
+            (output[currentOptionKey].schema instanceof TypeArray ||
+              output[currentOptionKey].schema instanceof TypeTuple)
           ) {
-            return
+            if (record.value) {
+              return output[currentOptionKey].values.push(record.value)
+            } else {
+              console.log('Hello')
+              return (mustNeedValue = true)
+            }
           }
 
           throw new NoArgError(
@@ -233,6 +253,7 @@ export class NoArgParser<
             )
         }
 
+        console.log(currentOptionKey, record.key, record.value)
         return (output[currentOptionKey] = {
           schema,
           values: record.value !== null ? [record.value] : [],
@@ -243,7 +264,13 @@ export class NoArgParser<
         })
       }
 
-      output[currentOptionKey].values.push(record.raw)
+      if (record.value) {
+        return output[currentOptionKey].values.push(record.value)
+      }
+
+      throw new NoArgError(
+        colors.red('Something went very very wrong, please report this issue')
+      )
     }
 
     checkRecord(record)

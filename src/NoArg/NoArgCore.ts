@@ -33,8 +33,6 @@ export class NoArgCore<
   }
 }
 
-NoArgCore.defaultOptions satisfies NoArgCore.Options
-
 export module NoArgCore {
   export type Config = {
     disableHelp?: boolean
@@ -59,16 +57,20 @@ export module NoArgCore {
   } as const
 
   export type System = {
-    equalAssign: boolean
+    allowEqualAssign: boolean
     booleanNotSyntaxEnding: string
+    allowDuplicateFlagForList: boolean
   }
 
   export const defaultSystem = {
-    equalAssign: true,
+    allowEqualAssign: true,
+    allowDuplicateFlagForList: true,
     booleanNotSyntaxEnding: '--',
   } as const
 
   export type DefaultSystem = typeof defaultSystem
-
   export type DefaultOptions = typeof NoArgCore.defaultOptions
+
+  defaultSystem satisfies System
+  defaultOptions satisfies Options
 }

@@ -4,7 +4,8 @@ import schema from '../schema/index'
 
 function callback(args: any, flags: any) {
   console.log(colors.green('-----------------'))
-  console.log({ args, flags })
+  console.log(args)
+  console.log(flags)
 }
 
 const app = NoArgRoot.create('app', {
@@ -18,8 +19,8 @@ const app = NoArgRoot.create('app', {
     sup: schema.string(),
   },
   globalFlags: {
-    silent: schema.string().default('false'),
-    files: schema.array(schema.string()).required(),
+    silent: schema.string(),
+    files: schema.array(schema.string()),
   },
   config: { disableHelp: true },
   arguments: [{ name: 'root' }],
@@ -56,12 +57,7 @@ const superInner = inner
     listArgument: { name: 'test', type: schema.string() },
     config: { disableHelp: false },
   })
-  .on((args, flags) => {
-    console.log(args)
-    console.log(flags)
-  })
-
-type abc = (typeof inner)['on']
+  .on(callback)
 
 app.start([
   'inner',
@@ -76,14 +72,18 @@ app.start([
   // '7',
   // '8',
   // '9',
-  '--silent',
-  'test',
   '--files',
-  'hello',
-  'world',
-  '--files',
-  'super',
-  '--files',
-  'array',
+  '--files=how',
+  '--files=how2',
+  // 'test',
+  // 'test',
+  // '--files',
+  // 'hello',
+  // 'world',
+  // '--files',
+  // 'super',
+  // '--files',
+  // 'array',
   // '-h',
+  // '--silent',
 ])

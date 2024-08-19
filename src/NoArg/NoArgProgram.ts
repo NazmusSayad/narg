@@ -449,7 +449,7 @@ export class NoArgProgram<
   }
 
   private renderUsageConfiguration() {
-    if (this.system.equalAssign) {
+    if (this.system.allowEqualAssign) {
       this.renderUsageUtils.printGroupHeader(
         'Options with equal value is enabled'
       )

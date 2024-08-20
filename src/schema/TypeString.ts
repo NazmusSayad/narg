@@ -2,14 +2,15 @@ import { Prettify } from '../types/util.t'
 import TypeCore, { TypeCoreConfig } from './TypeCore'
 import { ResultErr, ResultOk } from './result'
 
-export type TypeStringConfig = TypeCoreConfig &
-  Partial<{
+export type TypeStringConfig = Partial<
+  TypeCoreConfig & {
     regex: RegExp
     minLength: number
     maxLength: number
     toCase: 'lower' | 'upper'
     enum: Set<string>
-  }>
+  }
+>
 
 export default class TypeString<
   const TConfig extends TypeStringConfig

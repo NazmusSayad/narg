@@ -21,6 +21,18 @@ export class NoArgCore<
     protected config: TConfig,
     protected options: TOptions
   ) {
+    options.flags = Object.fromEntries(
+      Object.entries(options.flags).sort(([, a]) => {
+        return a.config.askQuestion !== undefined ? 1 : -1
+      })
+    )
+
+    options.globalFlags = Object.fromEntries(
+      Object.entries(options.globalFlags).sort(([, a]) => {
+        return a.config.askQuestion !== undefined ? 1 : -1
+      })
+    )
+
     options.flags &&
       Object.keys(options.flags).forEach((name) => {
         validateFlagName(name, system?.booleanNotSyntaxEnding)

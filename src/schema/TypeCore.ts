@@ -40,12 +40,12 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
   }
 
   ask<TDefault extends string, SELF = typeof this>(
-    question?: TDefault
+    askQuestion?: TDefault
   ): InferAndUpdateConfig<
     SELF,
-    Prettify<MergeObject<TConfig, { ask: TDefault }>>
+    Prettify<MergeObject<TConfig, { askQuestion: TDefault }>>
   > {
-    this.config.askQuestion = question ?? 'Enter a value:'
+    this.config.askQuestion = askQuestion ?? 'Enter a value:'
     return this as any
   }
 

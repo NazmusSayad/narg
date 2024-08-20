@@ -1,11 +1,10 @@
 {
   "name": "noarg",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "scripts": {
     "dev": "npmize dev",
     "build": "npmize build",
     "lab": "w ./src/___lab___/index.ts",
-    "js": "nw ./dist/___lab___/index.js",
     "cjs": "nw ./dist/___lab___/index.cjs",
     "mjs": "nw ./dist/___lab___/index.mjs"
   },
@@ -19,7 +18,7 @@
     "@types/node": "^22.4.0",
     "@types/readline-sync": "^1.4.8",
     "colors-cli": "^1.0.33",
-    "npmize": "^0.0.10",
+    "npmize": "^1.0.3",
     "typescript": "^5.5.4"
   },
   "main": "./dist/index.cjs",

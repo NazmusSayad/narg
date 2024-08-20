@@ -4,8 +4,6 @@ import schema from '../schema/index'
 
 import { splitTrailingArgs } from '..'
 
-console.log(splitTrailingArgs(['--silent', 'true', '--', '--no', 'false']))
-
 function callback(args: any, flags: any) {
   console.log(colors.green('-----------------'))
   console.log(args)
@@ -16,17 +14,23 @@ const app = NoArgRoot.create('app', {
   description: 'This is an app',
   flags: {
     zzzz: schema.string(),
-    test: schema.string().required(),
+    sup: schema.string().ask('who are you?'),
+    test: schema
+      .array(schema.string().default('test'))
+      .required()
+      .minLength(2)
+      .ask('who are you?'),
     test2: schema.string().required(),
     sql: schema.string().required(),
     sql2: schema.string().required(),
-    sup: schema.string(),
   },
   globalFlags: { silent: schema.string() },
   config: {},
-  arguments: [{ name: 'root', ask: 'What is your root?' }],
-  optionalArguments: [{ name: 'nope', type: schema.number() }],
-  listArgument: { name: 'test', minLength: 2, maxLength: 3 },
+  // arguments: [
+  //   { name: 'root', type: schema.string().ask('who are you?').default('root') },
+  // ],
+  // optionalArguments: [{ name: 'nope', type: schema.number() }],
+  // listArgument: { name: 'test', minLength: 2, maxLength: 3 },
 
   system: {},
 }).on(callback)
@@ -68,7 +72,7 @@ const superInner = inner
   })
   .on(callback)
 
-// app.start(['-hu'])
+app.start([''])
 
 // const result = app.start([
 //   'inner',

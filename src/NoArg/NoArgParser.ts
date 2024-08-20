@@ -299,7 +299,11 @@ export class NoArgParser<
   ): unknown {
     while (true) {
       const input = readLineSync.question(
-        `${options.forceTypeLabel ?? colors.yellow(schema.name)}: `,
+        `${
+          options.forceTypeLabel ??
+          colors.yellow(schema.name) +
+            (schema.config.default != null ? '?' : '')
+        }: `,
         {
           defaultInput: schema.config.default,
         }
@@ -328,6 +332,7 @@ export class NoArgParser<
 
   private askArrayInput(schema: TypeArray<TypeArrayConfig>) {
     const output: any[] = []
+    delete schema.config.schema.config.default
     schema.config.minLength ??= 0
     schema.config.maxLength ??= Infinity
 

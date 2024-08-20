@@ -1,6 +1,6 @@
 {
   "name": "noarg",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "scripts": {
     "dev": "npmize dev",
     "build": "npmize build",
@@ -18,7 +18,7 @@
     "@types/node": "^22.4.0",
     "@types/readline-sync": "^1.4.8",
     "colors-cli": "^1.0.33",
-    "npmize": "^1.0.3",
+    "npmize": "^1.0.4",
     "typescript": "^5.5.4"
   },
   "main": "./dist/index.cjs",

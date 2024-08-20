@@ -365,6 +365,19 @@ export class NoArgProgram<
 
       console.log('')
     }
+
+    if (!this.config.disableHelp) {
+      console.log(colors.bold('Tips:'))
+      console.log(
+        'Use',
+        colors.yellow('--help-usage'),
+        'or',
+        colors.yellow('--hu'),
+        'flag to see how to use the program'
+      )
+
+      console.log('')
+    }
   }
 
   private renderUsageUtils = {

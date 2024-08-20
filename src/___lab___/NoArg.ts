@@ -19,7 +19,7 @@ const app = NoArgRoot.create('app', {
     sup: schema.string(),
   },
   globalFlags: { silent: schema.string() },
-  config: { disableHelp: true },
+  config: {},
   arguments: [{ name: 'root', ask: 'What is your root?' }],
   optionalArguments: [{ name: 'nope', type: schema.number() }],
   listArgument: { name: 'test', minLength: 2, maxLength: 3 },
@@ -64,25 +64,27 @@ const superInner = inner
   })
   .on(callback)
 
-app.start([
-  'inner',
-  'superInner',
-  'arg',
-  'opt',
-  '1',
-  '2',
-  '3',
-  '--do\\',
-  '--files',
-  'when',
-  'when2',
-  '--files',
-  'how',
-  '--files=single',
-  'double',
-  '--silent',
-  'true',
-  // '--silent',
-  // 'false',
-  '--no',
-])
+app.renderHelp()
+
+// const result = app.start([
+//   'inner',
+//   'superInner',
+//   'arg',
+//   'opt',
+//   '1',
+//   '2',
+//   '3',
+//   '--do\\',
+//   '--files',
+//   'when',
+//   'when2',
+//   '--files',
+//   'how',
+//   '--files=single',
+//   'double',
+//   '--silent',
+//   'true',
+//   // '--silent',
+//   // 'false',
+//   '--no',
+// ])

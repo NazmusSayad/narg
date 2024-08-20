@@ -460,26 +460,17 @@ export class NoArgParser<
     if (this.browsePrograms(args)) return
 
     if (!this.config.disableHelp) {
-      let hasHelp = false
-      let hasUsage = false
-      args.some((current) => {
+      args.forEach((current) => {
         if (current === '--help' || current === '-h') {
-          hasHelp = true
-          return true
+          ;(this as any)['renderHelp']()
+          return process.exit(0)
         }
 
-        if (current === '--usage' || current === '-u') {
-          hasUsage = true
-          return true
+        if (current === '--help-usage' || current === '-hu') {
+          ;(this as any)['renderUsages']()
+          return process.exit(0)
         }
       })
-
-      if (hasHelp || hasUsage) {
-        console.clear()
-        hasHelp && (this['renderHelp' as keyof this] as any)()
-        hasUsage && (this['renderUsages' as keyof this] as any)()
-        return process.exit(0)
-      }
     }
 
     return this.parseCore(args)

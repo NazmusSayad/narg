@@ -1,22 +1,26 @@
 {
   "name": "noarg",
-  "version": "2.0.0",
-  "dependencies": {
-    "ansi-colors": "^4.1.3",
-    "cli-table3": "^0.6.3",
-    "prompt-sync": "^4.2.0",
-    "readline-sync": "^1.4.10"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.10",
-    "@types/readline-sync": "^1.4.8",
-    "npmize": "^0.0.10",
-    "typescript": "^5.3.3"
-  },
+  "version": "3.0.1",
   "scripts": {
     "dev": "npmize dev",
     "build": "npmize build",
-    "lab": "w ./src/__lab.ts"
+    "lab": "w ./src/___lab___/index.ts",
+    "js": "nw ./dist/___lab___/index.js",
+    "cjs": "nw ./dist/___lab___/index.cjs",
+    "mjs": "nw ./dist/___lab___/index.mjs"
+  },
+  "dependencies": {
+    "ansi-colors": "^4.1.3",
+    "cli-table3": "^0.6.5",
+    "readline-sync": "^1.4.10"
+  },
+  "devDependencies": {
+    "@types/cli-color": "^2.0.6",
+    "@types/node": "^22.4.0",
+    "@types/readline-sync": "^1.4.8",
+    "colors-cli": "^1.0.33",
+    "npmize": "^0.0.10",
+    "typescript": "^5.5.4"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -25,5 +29,18 @@
       "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     }
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NazmusSayad/noarg.git"
+  },
+  "keywords": [
+    "noarg",
+    "noargs",
+    "no-arg",
+    "no-args",
+    "node arg",
+    "node args",
+    "node argv"
+  ]
 }

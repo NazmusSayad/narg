@@ -1,11 +1,4 @@
-import NoArg from './NoArg'
-import t from './schemaType/t'
-import currentModule from './currentModule'
-
+import NoArg from './NoArg/index'
+import t from './schema'
 export default NoArg
-export { NoArg, t, currentModule }
-
-export * from './lib/extra'
-export * from './schemaType/type.t'
-export * from './schemaType/index'
-export * from './schemaType/result'
+export { t }

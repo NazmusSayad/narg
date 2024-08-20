@@ -1,10 +1,16 @@
 import MJSTable from 'cli-table3'
 import * as CJSTable from 'cli-table3'
-import currentModule from '../currentModule'
+import currentModule from './currentModule'
 
-const terminalWidth = process.stdout.columns - 3
+const MAX_WIDTH = 80
+const MIN_WIDTH = 40
+const terminalWidth = process.stdout.columns - 4
 const tableWidth =
-  terminalWidth > 80 ? 80 : terminalWidth < 50 ? 50 : terminalWidth
+  terminalWidth > MAX_WIDTH
+    ? MAX_WIDTH
+    : terminalWidth < MIN_WIDTH
+    ? MIN_WIDTH
+    : terminalWidth
 
 const Table = currentModule.isCJS
   ? CJSTable

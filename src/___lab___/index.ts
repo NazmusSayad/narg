@@ -1,0 +1,2 @@
+console.clear();
+import './NoArg'

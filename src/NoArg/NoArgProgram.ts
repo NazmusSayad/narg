@@ -372,7 +372,7 @@ export class NoArgProgram<
         'Use',
         colors.yellow('--help-usage'),
         'or',
-        colors.yellow('--hu'),
+        colors.yellow('-hu'),
         'flag to see how to use the program'
       )
 

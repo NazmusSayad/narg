@@ -3,6 +3,7 @@ import colors from '../lib/colors'
 import { NoArgCore } from './NoArgCore'
 import { NoArgError } from './NoArgError'
 import { isSchemaList } from '../schema/utils'
+import type { NoArgProgram } from './NoArgProgram'
 import { TypeBoolean } from '../schema/TypeBoolean'
 import { TSchema, TSchemaPrimitive } from '../schema/type.t'
 import TypeTuple, { TypeTupleConfig } from '../schema/TypeTuple'
@@ -460,14 +461,16 @@ export class NoArgParser<
     if (this.browsePrograms(args)) return
 
     if (!this.config.disableHelp) {
-      args.forEach((current) => {
-        if (current === '--help' || current === '-h') {
-          ;(this as any)['renderHelp']()
+      const self = this as unknown as NoArgProgram<any, any, any, any>
+
+      args.forEach((arg) => {
+        if (arg === '--help' || arg === '-h') {
+          self.renderHelp()
           return process.exit(0)
         }
 
-        if (current === '--help-usage' || current === '-hu') {
-          ;(this as any)['renderUsages']()
+        if (arg === '--help-usage' || arg === '-hu') {
+          self.renderUsage()
           return process.exit(0)
         }
       })

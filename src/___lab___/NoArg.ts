@@ -2,6 +2,10 @@ import colors from '../lib/colors'
 import NoArgRoot from '../NoArg/index'
 import schema from '../schema/index'
 
+import { splitTrailingArgs } from '..'
+
+console.log(splitTrailingArgs(['--silent', 'true', '--', '--no', 'false']))
+
 function callback(args: any, flags: any) {
   console.log(colors.green('-----------------'))
   console.log(args)
@@ -64,7 +68,7 @@ const superInner = inner
   })
   .on(callback)
 
-app.renderHelp()
+// app.start(['-hu'])
 
 // const result = app.start([
 //   'inner',

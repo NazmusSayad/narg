@@ -36,7 +36,6 @@ export class NoArgCore<
 export module NoArgCore {
   export type Config = {
     disableHelp?: boolean
-    ignoreTrailingArgs?: boolean
   }
 
   export type Options = {

@@ -2,6 +2,7 @@ import * as readLineSync from 'readline-sync'
 import colors from '../lib/colors'
 import { NoArgCore } from './NoArgCore'
 import { NoArgError } from './NoArgError'
+import { isSchemaList } from '../schema/utils'
 import { TypeBoolean } from '../schema/TypeBoolean'
 import { TSchema, TSchemaPrimitive } from '../schema/type.t'
 import TypeTuple, { TypeTupleConfig } from '../schema/TypeTuple'
@@ -48,65 +49,71 @@ export class NoArgParser<
   }
 
   private parseArguments(args: string[]) {
-    const duplicateArgs = [...args]
+    args = [...args]
     this.options.arguments ??= []
     this.options.optionalArguments ??= []
 
-    if (duplicateArgs.length < this.options.arguments.length) {
-      const givenArgsCount = duplicateArgs.length
-      const neededArgsCount = this.options.arguments.length
-      const missingArgsCount =
-        this.options.arguments.length - duplicateArgs.length
-
-      const remainingArgs = this.options.arguments
-        .slice(givenArgsCount)
-        .map(({ name }) => colors.blue(name))
-        .join(', ')
-
-      throw new NoArgError(
-        `Expected ${neededArgsCount} arguments, missing: ${missingArgsCount}, [${remainingArgs}]`
-      )
-    }
-
     const resultArgs = this.options.arguments.map((config) => {
-      const input = duplicateArgs.shift()!
-      if (!config.type) return input
-      const { value, error, valid } = config.type.parse(input)
-      if (valid) return value
-      throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
-    })
+      const input = args.shift()
 
-    const resultOptArgs = this.options.optionalArguments?.map((config) => {
-      if (duplicateArgs.length === 0) return
-      const input = duplicateArgs.shift()!
-      if (!config.type) return input
-      const { value, error, valid } = config.type.parse(input)
-      if (valid) return value
-      throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
-    })
+      if (!input) {
+        if (!config.type?.config.askQuestion) {
+          throw new NoArgError(
+            `No value provided for argument: ${colors.blue(config.name)}`
+          )
+        }
 
-    const resultList: any[] = []
-    if (this.options.listArgument?.type) {
-      const arraySchema = new TypeArray({
-        schema: this.options.listArgument.type,
-        minLength: this.options.listArgument.minLength,
-        maxLength: this.options.listArgument.maxLength,
-      })
-
-      const { value, error, valid } = arraySchema.parse(duplicateArgs)
-
-      if (valid) {
-        resultList.push(...value)
-      } else {
-        throw new NoArgError(
-          `${error} for list argument: ${colors.blue(
-            this.options.listArgument.name
+        console.log(
+          `${colors.red(config.name)}: ${colors.cyan(
+            config.type.config.askQuestion
           )}`
         )
+        return this.askPrimitiveInput(config.type, {
+          inputRequired: true,
+        })
+      }
+
+      if (!config.type) return input
+      const { value, error, valid } = config.type.parse(input)
+      if (valid) return value
+      throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
+    })
+
+    const resultOptArgs = this.options.optionalArguments.map((config) => {
+      if (args.length === 0) return
+      const input = args.shift()
+      if (!config.type) return input
+      const { value, error, valid } = config.type.parse(input)
+      if (valid) return value
+      throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
+    })
+
+    const resultListArg: any[] = []
+    if (this.options.listArgument) {
+      if (!this.options.listArgument.type) {
+        resultListArg.push(...args)
+      } else {
+        const arraySchema = new TypeArray({
+          schema: this.options.listArgument.type,
+          minLength: this.options.listArgument.minLength,
+          maxLength: this.options.listArgument.maxLength,
+        })
+
+        const { value, error, valid } = arraySchema.parse(args)
+
+        if (valid) {
+          resultListArg.push(...value)
+        } else {
+          throw new NoArgError(
+            `${error} for list argument: ${colors.blue(
+              this.options.listArgument.name
+            )}`
+          )
+        }
       }
     }
 
-    return { resultArgs, resultOptArgs, resultList }
+    return { resultArgs, resultOptArgs, resultList: resultListArg }
   }
 
   private findFlagInSchema(record: NoArgParser.ParsedFlagRecord) {
@@ -191,16 +198,15 @@ export class NoArgParser<
     ) => {
       const outputRecord = output[schemaKey]
 
-      if (
-        this.system.allowDuplicateFlagForList &&
-        (outputRecord.schema instanceof TypeArray ||
-          outputRecord.schema instanceof TypeTuple)
-      ) {
-        return
-      }
-
-      if (this.system.allowDuplicateFlagForPrimitive) {
-        return (outputRecord.values.length = 0)
+      if (isSchemaList(outputRecord.schema)) {
+        if (this.system.allowDuplicateFlagForList) {
+          if (!this.system.overwriteDuplicateFlagForList) return
+          return (outputRecord.values = [])
+        }
+      } else {
+        if (this.system.allowDuplicateFlagForPrimitive) {
+          return (outputRecord.values.length = 0)
+        }
       }
 
       throw new NoArgError(
@@ -288,11 +294,11 @@ export class NoArgParser<
 
   private askPrimitiveInput(
     schema: TSchemaPrimitive,
-    options: { forceTitle?: string; inputRequired?: boolean } = {}
+    options: { forceTypeLabel?: string; inputRequired?: boolean } = {}
   ): unknown {
     while (true) {
       const input = readLineSync.question(
-        `${options.forceTitle ?? colors.yellow(schema.name)}: `,
+        `${options.forceTypeLabel ?? colors.yellow(schema.name)}: `,
         {
           defaultInput: schema.config.default,
         }
@@ -326,7 +332,7 @@ export class NoArgParser<
 
     while (output.length < schema.config.maxLength) {
       const input = this.askPrimitiveInput(schema.config.schema, {
-        forceTitle:
+        forceTypeLabel:
           colors.yellow(schema.config.schema.name) +
           '[' +
           colors.yellow(String(output.length + 1)) +
@@ -352,7 +358,7 @@ export class NoArgParser<
     return schema.config.schema.map((schema, i) => {
       return this.askPrimitiveInput(schema, {
         inputRequired: true,
-        forceTitle:
+        forceTypeLabel:
           colors.yellow(schema.name) + '[' + colors.yellow(String(i)) + ']',
       })
     })
@@ -373,9 +379,7 @@ export class NoArgParser<
         )
       }
 
-      const isList =
-        argValue.schema instanceof TypeArray ||
-        argValue.schema instanceof TypeTuple
+      const isList = isSchemaList(argValue.schema)
 
       if (!isList && argValue.values.length > 1) {
         throw new NoArgError(
@@ -406,8 +410,10 @@ export class NoArgParser<
       const hasDefault = 'default' in schema.config
 
       if (!hasValue) {
-        if (schema.config.ask) {
-          console.log(`--${colors.red(key)} ${colors.cyan(schema.config.ask!)}`)
+        if (schema.config.askQuestion) {
+          console.log(
+            `--${colors.red(key)}: ${colors.cyan(schema.config.askQuestion!)}`
+          )
 
           const value =
             schema instanceof TypeArray

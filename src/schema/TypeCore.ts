@@ -8,7 +8,7 @@ export type TypeCoreConfig = Partial<{
   description: string
   required: boolean
   default: any
-  ask: string
+  askQuestion: string
 }>
 
 export default class TypeCore<TConfig extends TypeCoreConfig> {
@@ -45,7 +45,7 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
     SELF,
     Prettify<MergeObject<TConfig, { ask: TDefault }>>
   > {
-    this.config.ask = question ?? 'Enter a value:'
+    this.config.askQuestion = question ?? 'Enter a value:'
     return this as any
   }
 

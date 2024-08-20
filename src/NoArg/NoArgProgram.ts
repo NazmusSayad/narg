@@ -12,12 +12,12 @@ import {
 import colors from '../lib/colors'
 import { CellValue } from 'cli-table3'
 import { NoArgCore } from './NoArgCore'
+import { NoArgError } from './NoArgError'
 import { CustomTable } from '../lib/table'
 import { NoArgParser } from './NoArgParser'
-import { Prettify, MergeObject, MakeObjectOptional } from '../types/util.t'
-import { NoArgError } from './NoArgError'
 import TypeArray from '../schema/TypeArray'
 import TypeTuple from '../schema/TypeTuple'
+import { Prettify, MergeObject, MakeObjectOptional } from '../types/util.t'
 
 export class NoArgProgram<
   TName extends string,
@@ -221,26 +221,29 @@ export class NoArgProgram<
     const tables = [] as [CellValue, CellValue, CellValue][]
 
     this.options.arguments.forEach((argument) => {
-      const { name, type, description } = argument
+      const { name, type } = argument
       tables.push([
         this.helpColors.arguments(name),
         this.helpColors.type(type?.name ?? 'string'),
-        this.helpColors.description(description ?? this.helpColors.emptyString),
+        this.helpColors.description(
+          type?.config.description ?? this.helpColors.emptyString
+        ),
       ])
     })
 
     this.options.optionalArguments.forEach((argument) => {
-      const { name, type, description } = argument
+      const { name, type } = argument
       tables.push([
         this.helpColors.arguments(name),
         this.helpColors.type(type?.name ?? 'string') + '?',
-        this.helpColors.description(description ?? this.helpColors.emptyString),
+        this.helpColors.description(
+          type?.config.description ?? this.helpColors.emptyString
+        ),
       ])
     })
 
     if (this.options.listArgument) {
-      const { name, type, description, minLength, maxLength } =
-        this.options.listArgument
+      const { name, type, minLength, maxLength } = this.options.listArgument
 
       const hasMinLength = minLength !== undefined
       const hasMaxLength = maxLength !== undefined
@@ -262,7 +265,9 @@ export class NoArgProgram<
       tables.push([
         this.helpColors.arguments(name),
         this.helpColors.type(type?.name ?? 'string') + '[]' + minMaxLengthStr,
-        this.helpColors.description(description ?? this.helpColors.emptyString),
+        this.helpColors.description(
+          type?.config.description ?? this.helpColors.emptyString
+        ),
       ])
     }
 
@@ -400,35 +405,41 @@ export class NoArgProgram<
     )
 
     console.log('')
-    this.renderUsageUtils.printPointHeader(colors.yellow('programs'))
+    this.renderUsageUtils.printPointHeader(this.helpColors.programs('programs'))
     console.log(
       '',
       "This is the command that you want to run. It's the first argument of the command line."
     )
 
     console.log('')
-    this.renderUsageUtils.printPointHeader(colors.blue('fixed-arguments'))
+    this.renderUsageUtils.printPointHeader(
+      this.helpColors.arguments('fixed-arguments')
+    )
     console.log(
       '',
       "These are the arguments that you want to pass to the command. Their position and length is fixed and can't be changed."
     )
 
     console.log('')
-    this.renderUsageUtils.printPointHeader(colors.blue('optional-arguments'))
+    this.renderUsageUtils.printPointHeader(
+      this.helpColors.arguments('optional-arguments')
+    )
     console.log(
       '',
       'These are the arguments that you want to pass to the command. They are optional and can be changed.'
     )
 
     console.log('')
-    this.renderUsageUtils.printPointHeader(colors.green('list-arguments'))
+    this.renderUsageUtils.printPointHeader(
+      this.helpColors.arguments('list-arguments')
+    )
     console.log(
       '',
       'These are the arguments that you want to pass to the command. They are list of values and length can vary on configuration. They also can be optional.'
     )
 
     console.log('')
-    this.renderUsageUtils.printPointHeader(colors.red('flags'))
+    this.renderUsageUtils.printPointHeader(this.helpColors.flags('flags'))
     console.log(
       '',
       'These are the options that you want to pass to the command. They are optional and can be changed.'
@@ -503,6 +514,100 @@ export class NoArgProgram<
         colors.yellow('--option') + colors.blue('=') + 'value'
       )
     }
+
+    if (this.system.allowDuplicateFlagForPrimitive) {
+      this.renderUsageUtils.printGroupHeader(
+        'Duplicate flags for primitive is enabled'
+      )
+      this.renderUsageUtils.printValid(
+        colors.yellow('--option'),
+        colors.dim('value1')
+      )
+      this.renderUsageUtils.printValid(
+        colors.yellow('--option'),
+        colors.black('value1'),
+        colors.yellow('--option'),
+        'value2'
+      )
+    } else {
+      this.renderUsageUtils.printGroupHeader(
+        'Duplicate flags for primitive is disabled'
+      )
+      this.renderUsageUtils.printValid(colors.yellow('--option'), 'value')
+      this.renderUsageUtils.printInvalid(
+        colors.yellow('--option'),
+        'value1',
+        colors.yellow('--option'),
+        'value2'
+      )
+    }
+
+    if (this.system.allowDuplicateFlagForList) {
+      this.renderUsageUtils.printGroupHeader(
+        'Duplicate flags for list is enabled'
+      )
+      this.renderUsageUtils.printValid(
+        colors.yellow('--option'),
+        'value1 value2',
+        colors.yellow('--option'),
+        'value3'
+      )
+      this.renderUsageUtils.printValid(
+        colors.yellow('--option'),
+        'value1',
+        colors.yellow('--option'),
+        'value2 value3'
+      )
+
+      if (this.system.overwriteDuplicateFlagForList) {
+        this.renderUsageUtils.printGroupHeader(
+          'Overwrite duplicate flags for list is enabled'
+        )
+
+        this.renderUsageUtils.printValid(
+          colors.yellow('--option'),
+          colors.black('value1'),
+          colors.yellow('--option'),
+          'value2 value3'
+        )
+        this.renderUsageUtils.printValid(
+          colors.yellow('--option'),
+          colors.black('value1 value2'),
+          colors.yellow('--option'),
+          'value3'
+        )
+      } else {
+        this.renderUsageUtils.printGroupHeader(
+          'Overwrite duplicate flags for list is disabled'
+        )
+
+        this.renderUsageUtils.printValid(
+          colors.yellow('--option'),
+          'value1 value2 value3'
+        )
+        this.renderUsageUtils.printValid(
+          colors.yellow('--option'),
+          'value1',
+          colors.yellow('--option'),
+          'value2'
+        )
+      }
+    } else {
+      this.renderUsageUtils.printGroupHeader(
+        'Duplicate flags for list is disabled'
+      )
+
+      this.renderUsageUtils.printValid(
+        colors.yellow('--option'),
+        'value1 value2 value3'
+      )
+      this.renderUsageUtils.printInvalid(
+        colors.yellow('--option'),
+        'value1',
+        colors.yellow('--option'),
+        'value2'
+      )
+    }
   }
 
   /**
@@ -515,7 +620,7 @@ export class NoArgProgram<
     this.renderUsageStructure()
     console.log('')
 
-    console.log(colors.bold(colors.cyan('📝 How to use:')))
+    console.log(colors.bold(colors.cyan('📝 How to use flags:')))
     this.renderUsageHowToUseOptions()
     console.log('')
 

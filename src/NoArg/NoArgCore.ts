@@ -61,6 +61,8 @@ export module NoArgCore {
     booleanNotSyntaxEnding: string
     allowDuplicateFlagForList: boolean
     allowDuplicateFlagForPrimitive?: boolean
+    overwriteDuplicateFlagForList?: boolean
+    splitListByComma?: string
   }
 
   export const defaultSystem = {

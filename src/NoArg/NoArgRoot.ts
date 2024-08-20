@@ -1,7 +1,7 @@
+import { NoArgCore } from './NoArgCore'
 import adminSymbol from './admin-symbol'
 import { NoArgProgram } from './NoArgProgram'
 import { MergeObject, Prettify } from '../types/util.t'
-import { NoArgCore } from './NoArgCore'
 
 export class NoArgRoot<
   TName extends string,

@@ -5,14 +5,13 @@ import { NoArgProgram } from './NoArgProgram'
 export type ArgumentsOptions = {
   name: string
   type?: TSchemaPrimitive
-  description?: string
+  // description?: string
+  // askQuestion?: string
 }
 
-export type OptionalArgumentsOptions = ArgumentsOptions & {
-  // Nothing :)
-}
+export type OptionalArgumentsOptions = Omit<ArgumentsOptions, 'ask'> & {}
 
-export type ListArgumentsOption = ArgumentsOptions & {
+export type ListArgumentsOption = Omit<ArgumentsOptions, 'ask'> & {
   minLength?: number
   maxLength?: number
 }

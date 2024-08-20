@@ -20,9 +20,11 @@ const app = NoArgRoot.create('app', {
   },
   globalFlags: { silent: schema.string() },
   config: { disableHelp: true },
-  arguments: [{ name: 'root' }],
+  arguments: [{ name: 'root', ask: 'What is your root?' }],
   optionalArguments: [{ name: 'nope', type: schema.number() }],
   listArgument: { name: 'test', minLength: 2, maxLength: 3 },
+
+  system: {},
 }).on(callback)
 
 const inner = app
@@ -46,11 +48,15 @@ const inner2 = app
 
 const superInner = inner
   .create('superInner', {
-    arguments: [{ name: 'joss', type: schema.string() }],
+    arguments: [
+      { name: 'joss1', type: schema.string(), askQuestion: 'who are you?' },
+      // { name: 'joss2', type: schema.string(), askQuestion: 'who are you?' },
+      // { name: 'joss3', type: schema.string(), askQuestion: 'who are you?' },
+    ],
     optionalArguments: [{ name: 'nope', type: schema.string() }],
-    listArgument: { name: 'test', type: schema.number() },
+    listArgument: { name: 'test' },
     flags: {
-      files: schema.tuple(schema.string(), schema.number()).aliases('f'),
+      files: schema.array(schema.string()).aliases('f'),
       do: schema.boolean(),
       no: schema.boolean(),
     },
@@ -67,16 +73,16 @@ app.start([
   '2',
   '3',
   '--do\\',
-  '--files=d',
   '--files',
   'when',
   'when2',
   '--files',
   'how',
+  '--files=single',
+  'double',
   '--silent',
   'true',
   // '--silent',
   // 'false',
   '--no',
-  '-h'
 ])

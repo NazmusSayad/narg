@@ -18,15 +18,10 @@ const app = NoArgRoot.create('app', {
     sql2: schema.string().required(),
     sup: schema.string(),
   },
-  globalFlags: {
-    silent: schema.string(),
-  },
+  globalFlags: { silent: schema.string() },
   config: { disableHelp: true },
   arguments: [{ name: 'root' }],
   optionalArguments: [{ name: 'nope', type: schema.number() }],
-  system: {
-    // booleanNotSyntaxEnding: '!',
-  },
   listArgument: { name: 'test', minLength: 2, maxLength: 3 },
 }).on(callback)
 
@@ -55,7 +50,7 @@ const superInner = inner
     optionalArguments: [{ name: 'nope', type: schema.string() }],
     listArgument: { name: 'test', type: schema.number() },
     flags: {
-      files: schema.array(schema.string()).aliases('f'),
+      files: schema.tuple(schema.string(), schema.number()).aliases('f'),
       do: schema.boolean(),
       no: schema.boolean(),
     },
@@ -73,14 +68,15 @@ app.start([
   '3',
   '--do\\',
   '--files=d',
-  '--silent=te',
   '--files',
   'when',
   'when2',
   '--files',
   'how',
+  '--silent',
+  'true',
   // '--silent',
-  // 'true',
-  'false',
+  // 'false',
   '--no',
+  '-h'
 ])

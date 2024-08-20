@@ -60,6 +60,7 @@ export module NoArgCore {
     allowEqualAssign: boolean
     booleanNotSyntaxEnding: string
     allowDuplicateFlagForList: boolean
+    allowDuplicateFlagForPrimitive?: boolean
   }
 
   export const defaultSystem = {

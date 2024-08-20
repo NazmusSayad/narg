@@ -25,6 +25,30 @@ export class NoArgRoot<
     super(name, system, config, options as any)
   }
 
+  /**
+   * Create a new NoArgRoot instance
+   * @param name The name of the program
+   * @param options The options for the program
+   * @returns A new NoArgRoot instance
+   * @example
+   * const program = NoArgRoot.create('my-program', {
+   *  description: 'This is my program',
+   *  arguments: [
+   *    { name: 'arg1', description: 'This is the first argument' }
+   *  ],
+   *  optionalArguments: [
+   *    { name: 'opt1', description: 'This is the first optional argument' }
+   *  ],
+   *  flags: {
+   *    flag1: t.string()
+   *  },
+   *  globalFlags: {
+   *    globalFlag1: t.string()
+   *  }
+   * })
+   *
+   * program.start()
+   */
   static create<
     const TName extends string,
     const TCreateConfig extends Prettify<
@@ -65,6 +89,16 @@ export class NoArgRoot<
     )
   }
 
+  /**
+   * Start the program
+   * @param args The arguments to start the program with
+   * @returns The result of the program
+   * @example
+   * program.start()
+   * program.start(['--flag1', 'value1'])
+   * program.start(['arg1', '--flag1', 'value1'])
+   * program.start(['arg1', '--flag1', 'value1', '--globalFlag1', 'value2'])
+   */
   public start(args: string[] = process.argv.slice(2)) {
     return this.startCore(args)
   }

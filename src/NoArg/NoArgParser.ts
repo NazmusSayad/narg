@@ -16,7 +16,7 @@ export class NoArgParser<
   private browsePrograms([name, ...args]: string[]) {
     const program = this.programs.get(name)
     if (program) {
-      program.startCore(args)
+      program['startCore'](args)
       return true
     }
   }
@@ -189,12 +189,19 @@ export class NoArgParser<
       record: NoArgParser.ParsedFlagRecord,
       schemaKey: string
     ) => {
+      const outputRecord = output[schemaKey]
+
       if (
         this.system.allowDuplicateFlagForList &&
-        (output[schemaKey].schema instanceof TypeArray ||
-          output[schemaKey].schema instanceof TypeTuple)
-      )
+        (outputRecord.schema instanceof TypeArray ||
+          outputRecord.schema instanceof TypeTuple)
+      ) {
         return
+      }
+
+      if (this.system.allowDuplicateFlagForPrimitive) {
+        return (outputRecord.values.length = 0)
+      }
 
       throw new NoArgError(
         `Duplicate option ${colors.cyan(record.arg!)} entered`

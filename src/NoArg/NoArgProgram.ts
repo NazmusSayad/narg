@@ -16,6 +16,8 @@ import { CustomTable } from '../lib/table'
 import { NoArgParser } from './NoArgParser'
 import { Prettify, MergeObject, MakeObjectOptional } from '../types/util.t'
 import { NoArgError } from './NoArgError'
+import TypeArray from '../schema/TypeArray'
+import TypeTuple from '../schema/TypeTuple'
 
 export class NoArgProgram<
   TName extends string,
@@ -36,6 +38,17 @@ export class NoArgProgram<
     this.parent = parent
   }
 
+  /**
+   * Create a new NoArgProgram instance
+   * @param name The name of the program
+   * @param options The options for the program
+   * @returns A new NoArgProgram instance
+   * @example
+   * const program = app.create('my-program', {
+   *   ...
+   * })
+   *
+   */
   public create<
     const TName extends string,
     const TCreateOptionsWithConfig extends Partial<NoArgCore.Options> & {
@@ -97,12 +110,20 @@ export class NoArgProgram<
   }
 
   protected action?: NoArgProgram.ExtractAction<TSystem, TConfig, TOptions>
+
+  /**
+   * Set the action of the program
+   * @example
+   * program.on((args, flags, config) => {
+   *  console.log(args)
+   * })
+   */
   public on(callback: NonNullable<typeof this.action>) {
     this.action = callback as any
     return this
   }
 
-  public startCore(args: string[]) {
+  protected startCore(args: string[]) {
     try {
       const result = this.parseStart(args)
       if (!result) return
@@ -276,7 +297,18 @@ export class NoArgProgram<
           (aliasString ? '\n ' + aliasString : '')
 
         const optionType =
-          this.helpColors.type(schema.name) +
+          (schema instanceof TypeArray
+            ? this.helpColors.type(schema.name) +
+              '[' +
+              this.helpColors.type(schema.config.schema.name) +
+              ']'
+            : schema instanceof TypeTuple
+            ? '[' +
+              schema.config.schema
+                .map((schema) => this.helpColors.type(schema.name))
+                .join(', ') +
+              ']'
+            : this.helpColors.type(schema.name)) +
           (schema.config.required
             ? 'default' in schema.config || 'ask' in schema.config
               ? '?'
@@ -292,9 +324,14 @@ export class NoArgProgram<
         ]
       })
 
-    CustomTable([5, 3, 10], ...optionData)
+    CustomTable([6, 5, 10], ...optionData)
   }
 
+  /**
+   * Render the help of the program
+   * @example
+   * program.renderHelp()
+   */
   public renderHelp() {
     this.renderHelpOverview()
     console.log('')
@@ -468,6 +505,11 @@ export class NoArgProgram<
     }
   }
 
+  /**
+   * Render the usage of the program
+   * @example
+   * program.renderUsage()
+   */
   public renderUsage() {
     console.log(colors.bold(colors.cyan('📝 Structure:')))
     this.renderUsageStructure()
@@ -494,9 +536,8 @@ export module NoArgProgram {
       : string
   }
 
-  export type ExtractOptionalArguments<T extends OptionalArgumentsOptions[]> = Partial<
-    ExtractArguments<T>
-  >
+  export type ExtractOptionalArguments<T extends OptionalArgumentsOptions[]> =
+    Partial<ExtractArguments<T>>
 
   export type ExtractListArgument<T extends ListArgumentsOption> =
     T['type'] extends TSchemaPrimitive

@@ -19,7 +19,7 @@ export default class TypeNumber<
 
     const number = Number(value.trim())
 
-    if (isNaN(number)) return new ResultErr(`"${value}" is not a valid number`)
+    if (isNaN(number)) return new ResultErr(`\`${value}\` is not a valid number`)
 
     if (this.config.min && number < this.config.min) {
       return new ResultErr(`Minimum ${this.config.min} characters expected`)
@@ -34,7 +34,7 @@ export default class TypeNumber<
       this.config.enum.size &&
       !this.config.enum.has(number)
     ) {
-      return new ResultErr(`"${number}" is not in enum`)
+      return new ResultErr(`\`${number}\` is not in enum`)
     }
 
     return new ResultOk(this.config.toInteger ? Math.floor(number) : number)

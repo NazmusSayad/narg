@@ -1,6 +1,6 @@
 import { MergeObject, Prettify } from '../types/util.t'
 import { ResultErr, ResultOk } from './result'
-import verifyOptionName from '../helpers/verify-flag-name'
+import verifyOptionName from '../helpers/validate-flag-name'
 import { ParsedResult, ExtractTypeOutput, InferAndUpdateConfig } from './type.t'
 
 export type TypeCoreConfig = Partial<{

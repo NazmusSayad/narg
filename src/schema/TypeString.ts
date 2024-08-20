@@ -43,7 +43,7 @@ export default class TypeString<
       this.config.enum.size &&
       !this.config.enum.has(value)
     ) {
-      return new ResultErr(`"${value}" is not in enum`)
+      return new ResultErr(`\`${value}\` is not in enum`)
     }
 
     return new ResultOk(value)

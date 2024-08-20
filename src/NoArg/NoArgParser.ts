@@ -1,13 +1,11 @@
+import * as readLineSync from 'readline-sync'
 import colors from '../lib/colors'
-import { TSchema, TSchemaPrimitive } from '../schema/type.t'
-import TypeArray, { TypeArrayConfig } from '../schema/TypeArray'
-import { TypeBoolean } from '../schema/TypeBoolean'
-import TypeTuple, { TypeTupleConfig } from '../schema/TypeTuple'
-import { Prettify } from '../types/util.t'
 import { NoArgCore } from './NoArgCore'
 import { NoArgError } from './NoArgError'
-import * as readLineSync from 'readline-sync'
-import verifyFlagName from '../helpers/verify-flag-name'
+import { TypeBoolean } from '../schema/TypeBoolean'
+import { TSchema, TSchemaPrimitive } from '../schema/type.t'
+import TypeTuple, { TypeTupleConfig } from '../schema/TypeTuple'
+import TypeArray, { TypeArrayConfig } from '../schema/TypeArray'
 
 export class NoArgParser<
   TName extends string,
@@ -31,7 +29,10 @@ export class NoArgParser<
     for (let arg of args) {
       const result = this.getFlagMetadata(arg)
 
-      if (result.optionType && !isOptionReached) {
+      if (
+        !isOptionReached &&
+        (result.argType === 'flag' || result.argType === 'alias')
+      ) {
         isOptionReached = true
       }
 
@@ -111,46 +112,47 @@ export class NoArgParser<
   private findFlagInSchema(record: NoArgParser.ParsedFlagRecord) {
     const combinedFlags = { ...this.options.globalFlags, ...this.options.flags }
 
-    if (record.optionType === 'flag') {
+    if (record.argType === 'flag') {
       const schema = combinedFlags[record.key!]
-      if (schema) return [record.key!, schema] as const
+      if (schema) return { schemaKey: record.key!, schema }
     }
 
-    if (record.optionType === 'alias') {
+    if (record.argType === 'alias') {
       const found = Object.entries(combinedFlags).find(([, schema]) => {
         return schema.config.aliases?.includes(record.key!)
       })
 
-      if (found) return found
+      if (found) return { schemaKey: found[0], schema: found[1] }
     }
 
-    throw new NoArgError(`Unknown option ${colors.red(record.raw)} entered`)
+    throw new NoArgError(`Unknown option ${colors.red(record.arg)} entered`)
   }
 
-  private getFlagMetadata(arg: string): NoArgParser.ParsedFlagRecord {
-    const isFlag = NoArgParser.flagRegexp.test(arg)
-    const isAlias = NoArgParser.flagAliasRegexp.test(arg)
-    const optionType = isFlag
+  private getFlagMetadata(rawArg: string): NoArgParser.ParsedFlagRecord {
+    const isFlag = NoArgParser.flagRegex.test(rawArg)
+    const isAlias = NoArgParser.flagAliasRegex.test(rawArg)
+    const argType = isFlag
       ? ('flag' as const)
       : isAlias
       ? ('alias' as const)
-      : null
+      : 'value'
 
-    let key = isFlag ? arg.slice(2) : isAlias ? arg.slice(1) : null
+    let key = isFlag ? rawArg.slice(2) : isAlias ? rawArg.slice(1) : null
     let value = null
-    let hasBooleanEndValue = false
+    let hasBooleanEndValue
 
     if (key) {
-      const hasValue = NoArgParser.optionWithValueRegexp.test(key)
+      const hasValue = NoArgParser.optionWithValueRegex.test(key)
+
       if (hasValue) {
         if (!this.system.allowEqualAssign) {
           throw new NoArgError(
-            `Equal assignment is not allowed ${colors.red(arg)}`
+            `Equal assignment is not allowed ${colors.red(rawArg)}`
           )
         }
 
         const { value: _value = null, key: _key = null } =
-          key.match(NoArgParser.optionWithValueRegexp)?.groups ?? {}
+          key.match(NoArgParser.optionWithValueRegex)?.groups ?? {}
 
         key = _key
         value = _value
@@ -158,123 +160,122 @@ export class NoArgParser<
         this.system.booleanNotSyntaxEnding &&
         key.endsWith(this.system.booleanNotSyntaxEnding)
       ) {
-        key = key.slice(0, -1)
+        key = key.slice(0, -this.system.booleanNotSyntaxEnding.length)
         hasBooleanEndValue = true
       }
+    } else {
+      value = rawArg
     }
 
     return {
-      raw: arg,
+      arg: rawArg,
       key,
       value,
-      optionType,
+      argType,
       hasBooleanEndValue,
-    }
+    } as NoArgParser.ParsedFlagRecord
   }
 
-  private parseFlagsCore([record, ...records]: NoArgParser.ParsedFlagRecord[]) {
-    if (!record && records.length === 0) return {}
-    const self = this
+  private checkRecordFactory(
+    output: Record<string, NoArgParser.ParsedFlagWithSchema>
+  ) {
+    let mustHaveAnyValue = false
+    let prevSchemaKeyRecord: NoArgParser.ParsedFlagRecord & {
+      schemaKey: string
+      schema: TSchema
+    }
 
-    if (!record?.optionType) {
+    const handleDuplicateValue = (
+      record: NoArgParser.ParsedFlagRecord,
+      schemaKey: string
+    ) => {
+      if (
+        this.system.allowDuplicateFlagForList &&
+        (output[schemaKey].schema instanceof TypeArray ||
+          output[schemaKey].schema instanceof TypeTuple)
+      )
+        return
+
       throw new NoArgError(
-        `Something went wrong, received ${colors.yellow(
-          record.raw
-        )}. Expected an option`
+        `Duplicate option ${colors.cyan(record.arg!)} entered`
       )
     }
 
-    let currentOptionKey: string = record.raw
-    let mustNeedValue: boolean = false
-    const output: Record<
-      string,
-      Prettify<
-        NoArgParser.ParsedFlagRecord & {
-          schema: TSchema
-          values: string[]
-          optionType: Exclude<NoArgParser.ParsedFlagRecord['optionType'], null>
-        }
-      >
-    > = {}
-
-    function checkRecord(record: NoArgParser.ParsedFlagRecord) {
-      if (mustNeedValue) {
-        mustNeedValue = false
+    const handleBooleanEndValue = (
+      record: NoArgParser.ParsedFlagRecord,
+      schema: TSchema
+    ) => {
+      if (schema instanceof TypeBoolean) record.value = 'false'
+      else {
         throw new NoArgError(
-          `No value given for option: ${colors.red(record.raw)}`
+          `Only boolean types accept \`${
+            this.system.booleanNotSyntaxEnding
+          }\` assignment for option: ${colors.red(record.arg)}`
         )
       }
+    }
 
-      if (record.key) {
-        try {
-          verifyFlagName(
-            'Option',
-            record.key,
-            self.system.booleanNotSyntaxEnding
-          )
-        } catch (err: any) {
-          throw new NoArgError(
-            err.message + ' for option ' + colors.red(record.raw)
-          )
-        }
+    const handleMustHaveValueRecord = () => {
+      const outputRecord = output[prevSchemaKeyRecord.schemaKey]
+      if (prevSchemaKeyRecord.schema instanceof TypeBoolean) {
+        outputRecord.values.push('true')
+        return (mustHaveAnyValue = false)
       }
 
-      if (record.optionType) {
-        const [key, schema] = self.findFlagInSchema(record)
-        currentOptionKey = key
-        console.log(record)
+      throw new NoArgError(
+        `No value given for option: ${colors.red(prevSchemaKeyRecord.arg)}`
+      )
+    }
 
-        if (output[currentOptionKey]) {
-          if (
-            self.system.allowDuplicateFlagForList &&
-            (output[currentOptionKey].schema instanceof TypeArray ||
-              output[currentOptionKey].schema instanceof TypeTuple)
-          ) {
-            if (record.value) {
-              return output[currentOptionKey].values.push(record.value)
-            } else {
-              console.log('Hello')
-              return (mustNeedValue = true)
-            }
-          }
+    return (record: NoArgParser.ParsedFlagRecord) => {
+      if (record.argType === 'flag' || record.argType === 'alias') {
+        const { schemaKey, schema } = this.findFlagInSchema(record)
 
-          throw new NoArgError(
-            `Duplicate option ${colors.cyan(record.raw!)} entered`
-          )
+        if (mustHaveAnyValue) handleMustHaveValueRecord()
+        if (schemaKey in output) handleDuplicateValue(record, schemaKey)
+        if (record.hasBooleanEndValue) handleBooleanEndValue(record, schema)
+
+        output[schemaKey] ??= {
+          argType: record.argType,
+          arg: record.arg,
+          schema: schema,
+          values: [],
         }
 
-        if (record.hasBooleanEndValue) {
-          if (schema instanceof TypeBoolean) record.value = 'false'
-          else
-            throw new NoArgError(
-              `Only boolean types accept '${
-                self.system.booleanNotSyntaxEnding
-              }' assignment for option: ${colors.red(record.raw)}`
-            )
+        if (record.value !== null) {
+          output[schemaKey].values.push(record.value)
+        } else {
+          mustHaveAnyValue = true
         }
 
-        console.log(currentOptionKey, record.key, record.value)
-        return (output[currentOptionKey] = {
-          schema,
-          values: record.value !== null ? [record.value] : [],
-
-          ...(record as typeof record & {
-            optionType: typeof record.optionType
-          }),
-        })
+        return (prevSchemaKeyRecord = { ...record, schemaKey, schema })
       }
 
-      if (record.value) {
-        return output[currentOptionKey].values.push(record.value)
+      if (record.argType === 'value') {
+        mustHaveAnyValue = false
+        return output[prevSchemaKeyRecord.schemaKey].values.push(record.value)
       }
 
       throw new NoArgError(
         colors.red('Something went very very wrong, please report this issue')
       )
     }
+  }
 
-    checkRecord(record)
-    records.forEach(checkRecord)
+  private parseFlagsCore(records: NoArgParser.ParsedFlagRecord[]) {
+    if (records.length === 0) return {}
+    if (records[0].argType === 'value') {
+      throw new NoArgError(
+        `Received a value: ${colors.yellow(
+          records[0].arg
+        )}. Expected an option.` +
+          '\n But this should never be happened. Please report this issue.'
+      )
+    }
+
+    const output = {} as Record<string, NoArgParser.ParsedFlagWithSchema>
+    const next = this.checkRecordFactory(output)
+    records.forEach(next)
     return output
   }
 
@@ -361,7 +362,7 @@ export class NoArgParser<
         }
 
         throw new NoArgError(
-          `No value given for option: ${colors.red(argValue.raw)}`
+          `No value given for option: ${colors.red(argValue.arg)}`
         )
       }
 
@@ -371,9 +372,9 @@ export class NoArgParser<
 
       if (!isList && argValue.values.length > 1) {
         throw new NoArgError(
-          `Multiple value entered [${argValue.values
+          `Multiple value entered \`${argValue.values
             .map(colors.green)
-            .join(', ')}] for option ${colors.cyan(argValue.raw)}`
+            .join('` `')}\` for option ${colors.cyan(argValue.arg)}`
         )
       }
 
@@ -383,7 +384,7 @@ export class NoArgParser<
 
       if (!valid) {
         throw new NoArgError(
-          `${error} for option: ${colors.cyan(argValue.raw)}`
+          `${error} for option: ${colors.cyan(argValue.arg)}`
         )
       }
 
@@ -474,14 +475,29 @@ export class NoArgParser<
 
 export module NoArgParser {
   export type ParsedFlagRecord = {
-    raw: string
-    key: string | null
-    value: string | null
-    optionType: 'flag' | 'alias' | null
-    hasBooleanEndValue: boolean
+    arg: string
+  } & (
+    | {
+        key: string
+        value: string | null
+        argType: 'flag' | 'alias'
+        hasBooleanEndValue: true
+      }
+    | {
+        key: null
+        value: string
+        argType: 'value'
+      }
+  )
+
+  export type ParsedFlagWithSchema = {
+    arg: string
+    schema: TSchema
+    values: string[]
+    argType: Exclude<NoArgParser.ParsedFlagRecord['argType'], 'value'>
   }
 
-  export const flagAliasRegexp = /^(\-)([^\-])/
-  export const flagRegexp = /^(\-\-)([^\-])/
-  export const optionWithValueRegexp = /^(?<key>[^\=]+)\=(?<value>.+)/
+  export const flagRegex = /^(\-\-)([^\-])/
+  export const flagAliasRegex = /^(\-)([^\-])/
+  export const optionWithValueRegex = /^(?<key>[^\=]+)\=(?<value>.+)/
 }

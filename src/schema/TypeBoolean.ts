@@ -13,6 +13,6 @@ export class TypeBoolean<
 
     if (value === 'true' || value === 'yes') return new ResultOk(true)
     if (value === 'false' || value === 'no') return new ResultOk(false)
-    return new ResultErr(`"${value}" is not a valid boolean`)
+    return new ResultErr(`\`${value}\` is not a valid boolean`)
   }
 }

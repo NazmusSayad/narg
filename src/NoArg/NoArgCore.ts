@@ -5,7 +5,7 @@ import {
   ListArgumentsOption,
   OptionalArgumentsOptions,
 } from './types.t'
-import verifyFlagName from '../helpers/verify-flag-name'
+import validateFlagName from '../helpers/validate-flag-name'
 
 export class NoArgCore<
   TName extends string,
@@ -23,12 +23,12 @@ export class NoArgCore<
   ) {
     options.flags &&
       Object.keys(options.flags).forEach((name) => {
-        verifyFlagName('Flag', name, system?.booleanNotSyntaxEnding)
+        validateFlagName(name, system?.booleanNotSyntaxEnding)
       })
 
     options.globalFlags &&
       Object.keys(options.globalFlags).forEach((name) => {
-        verifyFlagName('Flag', name, system?.booleanNotSyntaxEnding)
+        validateFlagName(name, system?.booleanNotSyntaxEnding)
       })
   }
 }
@@ -65,7 +65,7 @@ export module NoArgCore {
   export const defaultSystem = {
     allowEqualAssign: true,
     allowDuplicateFlagForList: true,
-    booleanNotSyntaxEnding: '--',
+    booleanNotSyntaxEnding: '\\',
   } as const
 
   export type DefaultSystem = typeof defaultSystem

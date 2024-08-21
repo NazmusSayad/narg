@@ -4,3 +4,6 @@
 !dist/**
 !package.json
 !README.md
+!LICENSE
+
+dist/___lab___

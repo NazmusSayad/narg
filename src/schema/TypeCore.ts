@@ -33,8 +33,9 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
     value: TDefault
   ): InferAndUpdateConfig<
     SELF,
-    Prettify<MergeObject<TConfig, { default: TDefault }>>
+    Prettify<MergeObject<TConfig, { default: TDefault; required: true }>>
   > {
+    this.config.required = true
     this.config.default = value
     return this as any
   }
@@ -44,7 +45,7 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
   ): InferAndUpdateConfig<
     SELF,
     Prettify<MergeObject<TConfig, { askQuestion: TDefault; required: true }>>
-    > {
+  > {
     this.config.required = true
     this.config.askQuestion = askQuestion ?? 'Enter a value:'
     return this as any

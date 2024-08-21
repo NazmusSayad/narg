@@ -55,7 +55,7 @@ const inner2 = app
 const superInner = inner
   .create('superInner', {
     arguments: [
-      { name: 'joss1', type: schema.string(), askQuestion: 'who are you?' },
+      // { name: 'joss1', type: schema.string().ask('who are you?') },
       // { name: 'joss2', type: schema.string(), askQuestion: 'who are you?' },
       // { name: 'joss3', type: schema.string(), askQuestion: 'who are you?' },
     ],
@@ -65,10 +65,13 @@ const superInner = inner
       files: schema.array(schema.string()).aliases('f'),
       do: schema.boolean(),
       no: schema.boolean(),
+      test: schema.string('1', '2').ask('test'),
     },
     config: { disableHelp: false },
   })
-  .on(callback)
+  .on((args, flags) => {
+    console.log({ args, flags })
+  })
 
 // app.start([''])
 
@@ -92,27 +95,27 @@ inputTest.on(([result], flags) => {
   console.log('RESULT:', flags)
 })
 
-inputTest.start([])
+// inputTest.start([])
 
-// const result = app.start([
-//   'inner',
-//   'superInner',
-//   'arg',
-//   'opt',
-//   '1',
-//   '2',
-//   '3',
-//   '--do\\',
-//   '--files',
-//   'when',
-//   'when2',
-//   '--files',
-//   'how',
-//   '--files=single',
-//   'double',
-//   '--silent',
-//   'true',
-//   // '--silent',
-//   // 'false',
-//   '--no',
-// ])
+app.start([
+  'inner',
+  'superInner',
+  // 'arg',
+  // 'opt',
+  // '1',
+  // '2',
+  // '3',
+  '--do\\',
+  '--files',
+  'when',
+  'when2',
+  '--files',
+  'how',
+  '--files=single',
+  'double',
+  '--silent',
+  'true',
+  // '--silent',
+  // 'false',
+  '--no',
+])

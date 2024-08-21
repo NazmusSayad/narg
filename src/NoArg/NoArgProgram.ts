@@ -1,9 +1,4 @@
 import {
-  TSchemaPrimitive,
-  ExtractTypeOutput,
-  ExtractTypeUndefined,
-} from '../schema/type.t'
-import {
   FlagOption,
   ArgumentsOptions,
   ListArgumentsOption,
@@ -13,10 +8,11 @@ import colors from '../lib/colors'
 import { CellValue } from 'cli-table3'
 import { NoArgCore } from './NoArgCore'
 import { NoArgError } from './NoArgError'
-import { CustomTable } from '../helpers/custom-table'
 import { NoArgParser } from './NoArgParser'
 import TypeArray from '../schema/TypeArray'
 import TypeTuple from '../schema/TypeTuple'
+import { CustomTable } from '../helpers/custom-table'
+import { TSchemaPrimitive, ExtractTypeOutput } from '../schema/type.t'
 import { Prettify, MergeObject, MakeObjectOptional } from '../types/util.t'
 
 export class NoArgProgram<
@@ -123,9 +119,9 @@ export class NoArgProgram<
     return this
   }
 
-  protected startCore(args: string[]) {
+  protected async startCore(args: string[]) {
     try {
-      const result = this.parseStart(args)
+      const result = await this.parseStart(args)
       if (!result) return
 
       const output = [
@@ -135,11 +131,10 @@ export class NoArgProgram<
       ] as Parameters<NonNullable<typeof this.action>>
 
       this.action?.(...output)
-      return output
     } catch (error) {
       if (error instanceof NoArgError) {
         console.error(colors.red('Error:'), `${error.message}`)
-        return process.exit(1)
+        process.exit(1)
       } else throw error
     }
   }
@@ -283,7 +278,9 @@ export class NoArgProgram<
       })
       .sort(([, a]) => {
         const isRequired = a.config.required
-        const hasDefault = 'default' in a.config
+        const hasDefault =
+          a.config.default !== undefined || a.config.askQuestion !== undefined
+
         if (isRequired && !hasDefault) return -3
         if (isRequired && hasDefault) return -2
         return 1
@@ -315,7 +312,8 @@ export class NoArgProgram<
               ']'
             : this.helpColors.type(schema.name)) +
           (schema.config.required
-            ? 'default' in schema.config || 'ask' in schema.config
+            ? schema.config.default !== undefined ||
+              schema.config.askQuestion !== undefined
               ? '?'
               : ''
             : '?')
@@ -665,7 +663,7 @@ export module NoArgProgram {
   export type ExtractFlags<T extends FlagOption> = {
     [K in keyof T]:
       | ExtractTypeOutput<T[K]>
-      | ExtractTypeUndefined<T[K]['config']>
+      | (T[K]['config']['required'] extends true ? never : undefined)
   }
 
   export type ExtractAction<

@@ -82,6 +82,8 @@ export class NoArgParser<
         schema.config.schema.map((schema) => schema.name)
       )
     }
+
+    throw new NoArgError(`Asking question is not supported`)
   }
 
   private browsePrograms([name, ...args]: string[]) {
@@ -116,67 +118,6 @@ export class NoArgParser<
     }
 
     return [argList, options] as const
-  }
-
-  private parseArguments(args: string[]) {
-    args = [...args]
-    this.options.arguments ??= []
-    this.options.optionalArguments ??= []
-
-    const resultArgs = this.options.arguments.map((config) => {
-      const input = args.shift()
-
-      if (!input) {
-        if (!config.type?.config.askQuestion) {
-          throw new NoArgError(
-            `No value provided for argument: ${colors.blue(config.name)}`
-          )
-        }
-
-        return this.askQuestion(config.type, colors.blue(config.name) + ':')
-      }
-
-      if (!config.type) return input
-      const { value, error, valid } = config.type.parse(input)
-      if (valid) return value
-      throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
-    })
-
-    const resultOptArgs = this.options.optionalArguments.map((config) => {
-      if (args.length === 0) return
-      const input = args.shift()
-      if (!config.type) return input
-      const { value, error, valid } = config.type.parse(input)
-      if (valid) return value
-      throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
-    })
-
-    const resultListArg: any[] = []
-    if (this.options.listArgument) {
-      if (!this.options.listArgument.type) {
-        resultListArg.push(...args)
-      } else {
-        const arraySchema = new TypeArray({
-          schema: this.options.listArgument.type,
-          minLength: this.options.listArgument.minLength,
-          maxLength: this.options.listArgument.maxLength,
-        })
-
-        const { value, error, valid } = arraySchema.parse(args)
-
-        if (valid) {
-          resultListArg.push(...value)
-        } else {
-          throw new NoArgError(
-            `${error} for list argument: ${colors.blue(
-              this.options.listArgument.name
-            )}`
-          )
-        }
-      }
-    }
-
-    return { resultArgs, resultOptArgs, resultList: resultListArg }
   }
 
   private findFlagInSchema(record: NoArgParser.ParsedFlagRecord) {
@@ -355,14 +296,108 @@ export class NoArgParser<
     return output
   }
 
-  private parseFlags(records: NoArgParser.ParsedFlagRecord[]): any {
-    const options = this.parseFlagsCore(records)
+  private async parseArguments(args: string[]) {
+    args = [...args]
+    this.options.arguments ??= []
+    this.options.optionalArguments ??= []
+    type ArgsOutputType = (string | number | boolean)[]
+
+    const resultArgs: ArgsOutputType = []
+    for (const config of this.options.arguments) {
+      const input = args.shift()
+
+      if (!input) {
+        if (config.type?.config.askQuestion === undefined) {
+          throw new NoArgError(
+            `No value provided for argument: ${colors.blue(config.name)}`
+          )
+        }
+
+        const result = await this.askQuestion(
+          config.type,
+          colors.blue(config.name) + ':'
+        )
+
+        resultArgs.push(result as ArgsOutputType[number])
+        continue
+      }
+
+      if (!config.type) {
+        resultArgs.push(input)
+        continue
+      }
+
+      const { value, error, valid } = config.type.parse(input)
+      if (valid) {
+        resultArgs.push(value)
+        continue
+      }
+
+      throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
+    }
+
+    const resultOptArgs: ArgsOutputType = []
+    for (const config of this.options.optionalArguments) {
+      if (args.length === 0) break
+      const input = args.shift()!
+
+      if (!config.type) {
+        resultOptArgs.push(input)
+        continue
+      }
+
+      const { value, error, valid } = config.type.parse(input)
+      if (valid) {
+        resultOptArgs.push(value)
+        continue
+      }
+
+      throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
+    }
+
+    const resultListArg: any[] = []
+    if (this.options.listArgument) {
+      if (!this.options.listArgument.type) {
+        resultListArg.push(...args)
+      } else {
+        const arraySchema = new TypeArray({
+          schema: this.options.listArgument.type,
+          minLength: this.options.listArgument.minLength,
+          maxLength: this.options.listArgument.maxLength,
+        })
+
+        const { value, error, valid } = arraySchema.parse(args)
+
+        if (valid) {
+          resultListArg.push(...value)
+        } else {
+          throw new NoArgError(
+            `${error} for list argument: ${colors.blue(
+              this.options.listArgument.name
+            )}`
+          )
+        }
+      }
+    }
+
+    return {
+      resultArgs,
+      resultOptArgs,
+      resultListArg,
+    }
+  }
+
+  private async parseFlags(records: NoArgParser.ParsedFlagRecord[]) {
+    const flagsRecordWithSchema = this.parseFlagsCore(records)
     const output: Record<string, any> = {}
 
-    Object.entries(options).forEach(([key, argValue]) => {
+    for (const key in flagsRecordWithSchema) {
+      const argValue = flagsRecordWithSchema[key]
+
       if (argValue.values.length === 0) {
         if (argValue.schema instanceof TypeBoolean) {
-          return (output[key] = true)
+          output[key] = true
+          continue
         }
 
         throw new NoArgError(
@@ -391,48 +426,53 @@ export class NoArgParser<
       }
 
       output[key] = value
-    })
+    }
 
     const combinedFlags = { ...this.options.globalFlags, ...this.options.flags }
+    for (const key in combinedFlags) {
+      const schema = combinedFlags[key]
 
-    Object.entries(combinedFlags).forEach(([key, schema]) => {
       const hasValue = key in output
       const isRequired = schema.config.required
-      const hasDefault = 'default' in schema.config
 
       if (!hasValue) {
-        if (schema.config.askQuestion) {
-          const value = this.askQuestion(schema, colors.cyan(`--${key}`) + ':')
-          return (output[key] = value)
+        if (schema.config.askQuestion !== undefined) {
+          const value = await this.askQuestion(
+            schema,
+            colors.cyan(`--${key}`) + ':'
+          )
+          output[key] = value
+          continue
         }
 
-        if (hasDefault) {
-          return (output[key] = schema.config.default)
+        if ('default' in schema.config) {
+          output[key] = schema.config.default
+          continue
         }
 
         if (isRequired) {
           throw new NoArgError(`Option ${colors.cyan('--' + key)} is required`)
         }
       }
-    })
+    }
 
     return output
   }
 
-  private parseCore(args: string[]) {
+  private async parseCore(args: string[]) {
     const [argsList, optionsRecord] = this.divideArguments(args)
-    const { resultArgs, resultOptArgs, resultList } =
-      this.parseArguments(argsList)
-    const resultOptions = this.parseFlags(optionsRecord)
 
-    const output = {
-      flags: resultOptions,
+    const { resultArgs, resultOptArgs, resultListArg } =
+      await this.parseArguments(argsList)
+
+    const resultFlags = await this.parseFlags(optionsRecord)
+
+    return {
       args: resultArgs,
+      flags: resultFlags,
       optArgs: resultOptArgs,
-      listArgs: resultList,
+      listArgs: resultListArg,
     }
-
-    return output
   }
 
   protected parseStart(

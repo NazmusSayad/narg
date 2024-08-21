@@ -42,20 +42,6 @@ export type ExtractTypeTupleCore<T extends TSchemaPrimitive[]> = {
     : T[K]
 }
 
-export type ExtractTypeUndefined<T extends TypeCoreConfig> = T extends {
-  required: true
-}
-  ? never
-  : T extends { default: infer U }
-  ? U extends undefined
-    ? undefined
-    : never
-  : T extends { ask: infer U }
-  ? U extends undefined
-    ? undefined
-    : never
-  : undefined
-
 export type ExtractTypeOutput<T> =
   // Extract String
   T extends TypeString<infer Config>

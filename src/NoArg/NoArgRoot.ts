@@ -92,7 +92,6 @@ export class NoArgRoot<
   /**
    * Start the program
    * @param args The arguments to start the program with
-   * @returns The result of the program
    * @example
    * program.start()
    * program.start(['--flag1', 'value1'])
@@ -100,7 +99,7 @@ export class NoArgRoot<
    * program.start(['arg1', '--flag1', 'value1', '--globalFlag1', 'value2'])
    */
   public start(args: string[] = process.argv.slice(2)) {
-    return this.startCore(args)
+    this.startCore(args)
   }
 }
 

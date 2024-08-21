@@ -2,8 +2,6 @@ import colors from '../lib/colors'
 import NoArgRoot from '../NoArg/index'
 import schema from '../schema/index'
 
-import { splitTrailingArgs } from '..'
-
 function callback(args: any, flags: any) {
   console.log(colors.green('-----------------'))
   console.log(args)
@@ -72,7 +70,29 @@ const superInner = inner
   })
   .on(callback)
 
-app.start([''])
+// app.start([''])
+
+const inputTest = NoArgRoot.create('inputTest', {
+  arguments: [
+    {
+      name: 'root',
+      type: schema
+        .string('main', 'master')
+        .ask('who are you?')
+        .default('master'),
+    },
+  ],
+
+  flags: {
+    do: schema.number().aliases('f').ask('who are you?').default(1),
+  },
+})
+
+inputTest.on(([result], flags) => {
+  console.log('RESULT:', flags)
+})
+
+inputTest.start([])
 
 // const result = app.start([
 //   'inner',

@@ -1,3 +1,4 @@
 console.clear();
-import './NoArg'
+import './age'
+// import './NoArg'
 // import './ask'

@@ -1,6 +1,6 @@
 {
   "name": "noarg",
-  "version": "3.0.6",
+  "version": "3.0.7",
   "scripts": {
     "dev": "npmize dev",
     "build": "npmize build",

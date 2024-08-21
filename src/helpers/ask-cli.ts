@@ -1,5 +1,5 @@
 import colors from '../lib/colors'
-import deasync from './deasync'
+import deasync from '../lib/deasync'
 import * as inquirer from '@inquirer/prompts'
 
 class AskCli {

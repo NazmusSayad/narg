@@ -15,7 +15,7 @@ npm install noarg
 ### Command Structure
 
 ```sh
-app (program) <required arguments> <optional arguments> ...<list arguments>[] [options]
+app (program) <required arguments> <optional arguments> ...<list arguments> [options]
 ```
 
 ### Getting Started

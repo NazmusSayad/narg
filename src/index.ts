@@ -1,6 +1,5 @@
-import NoArg from './NoArg/index'
+import { NoArgRoot as NoArg } from './NoArg/NoArgRoot'
 import t from './schema'
 
-export * from './utils'
-export { t, NoArg }
+export { NoArg, t }
 export default NoArg

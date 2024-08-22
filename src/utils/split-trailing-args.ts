@@ -1,6 +1,6 @@
 export default function (
   args: string[] = process.argv.slice(2),
-  separator = '---'
+  separator: string
 ): [string[], string[]] {
   const mainArgs: string[] = []
   const trailingArgs: string[] = []

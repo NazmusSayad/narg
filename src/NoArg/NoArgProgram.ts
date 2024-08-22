@@ -11,8 +11,8 @@ import { NoArgError } from './NoArgError'
 import { NoArgParser } from './NoArgParser'
 import { TypeArray } from '../schema/TypeArray'
 import { TypeTuple } from '../schema/TypeTuple'
+import { ExtractTypeOutput } from '../schema/type.t'
 import { CustomTable } from '../helpers/custom-table'
-import { TSchemaPrimitive, ExtractTypeOutput } from '../schema/type.t'
 import { Prettify, MergeObject, MakeObjectOptional } from '../types/util.t'
 
 export class NoArgProgram<
@@ -105,17 +105,21 @@ export class NoArgProgram<
     return child
   }
 
-  protected action?: NoArgProgram.ExtractAction<TSystem, TConfig, TOptions>
+  protected onActionCallback?: NoArgProgram.ExtractAction<
+    TSystem,
+    TConfig,
+    TOptions
+  >
 
   /**
    * Set the action of the program
    * @example
-   * program.on((args, flags, config) => {
+   * program.on((args, flags, config, system) => {
    *  console.log(args)
    * })
    */
-  public on(callback: NonNullable<typeof this.action>) {
-    this.action = callback as any
+  public on(callback: NonNullable<typeof this.onActionCallback>) {
+    this.onActionCallback = callback as any
     return this
   }
 
@@ -125,12 +129,18 @@ export class NoArgProgram<
       if (!result) return
 
       const output = [
-        [...result.args, ...result.optArgs, result.listArgs],
+        [
+          ...result.args,
+          ...result.optArgs,
+          ...(this.options.listArgument ? [result.listArgs] : []),
+          ...(this.config.enableTrailingArgs ? [result.trailingArgs] : []),
+        ],
         result.flags,
         this.config,
-      ] as Parameters<NonNullable<typeof this.action>>
+        this.system,
+      ] as Parameters<NonNullable<typeof this.onActionCallback>>
 
-      this.action?.(...output)
+      this.onActionCallback?.(...output)
     } catch (error) {
       if (error instanceof NoArgError) {
         console.error(colors.red('Error:'), `${error.message}`)
@@ -145,6 +155,7 @@ export class NoArgProgram<
     programs: colors.red,
     arguments: colors.blue,
     flags: colors.cyan,
+    trailingArgs: colors.green,
     emptyString: colors.dim('---'),
   }
 
@@ -181,6 +192,13 @@ export class NoArgProgram<
       Object.keys(this.options.globalFlags).length
     ) {
       commandItems.push(this.helpColors.flags('--[flags]'))
+    }
+
+    if (this.config.enableTrailingArgs) {
+      commandItems.push(
+        this.helpColors.description(this.system.trailingArgsSeparator),
+        this.helpColors.description('[...trailing-args]')
+      )
     }
 
     console.log(
@@ -243,24 +261,25 @@ export class NoArgProgram<
 
       const hasMinLength = minLength !== undefined
       const hasMaxLength = maxLength !== undefined
-      let minMaxLengthStr = ''
+      let nameSuffix = this.options.listArgument.minLength ? '' : '?'
+
       if (hasMinLength || hasMaxLength) {
-        minMaxLengthStr += '\n'
+        nameSuffix += '\n'
 
         if (hasMinLength) {
-          minMaxLengthStr += 'Min: ' + colors.yellow(String(minLength))
+          nameSuffix += 'Min: ' + colors.yellow(String(minLength))
         }
 
-        minMaxLengthStr += '\n'
+        nameSuffix += '\n'
 
         if (hasMaxLength) {
-          minMaxLengthStr += 'Max: ' + colors.yellow(String(maxLength))
+          nameSuffix += 'Max: ' + colors.yellow(String(maxLength))
         }
       }
 
       tables.push([
         this.helpColors.arguments(name),
-        this.helpColors.type(type.name) + '[]' + minMaxLengthStr,
+        this.helpColors.type(type.name) + '[]' + nameSuffix,
         this.helpColors.description(description ?? this.helpColors.emptyString),
       ])
     }
@@ -345,7 +364,8 @@ export class NoArgProgram<
 
     if (
       this.options.arguments.length ||
-      this.options.optionalArguments.length
+      this.options.optionalArguments.length ||
+      this.options.listArgument
     ) {
       this.renderHelpArguments()
       console.log('')
@@ -363,10 +383,22 @@ export class NoArgProgram<
       console.log('')
     }
 
+    if (this.config.enableTrailingArgs) {
+      console.log(colors.bold('Trailing Arguments:'))
+
+      console.log(
+        ` These arguments are ${colors.red(
+          'ignored'
+        )} by the program and are passed as is.`
+      )
+
+      console.log('')
+    }
+
     if (!this.config.disableHelp) {
       console.log(colors.bold('Tips:'))
       console.log(
-        'Use',
+        ' Use',
         colors.yellow('--help-usage'),
         'or',
         colors.yellow('-hu'),
@@ -391,7 +423,7 @@ export class NoArgProgram<
     },
 
     printPointHeader(...args: string[]) {
-      console.log(' -', colors.black(args.join(' ')))
+      console.log('   -', colors.black(args.join(' ')))
     },
 
     tableGroup(name: string, result: string, ...args: string[]) {
@@ -406,7 +438,8 @@ export class NoArgProgram<
       this.helpColors.arguments('fixed-arguments'),
       this.helpColors.arguments('optional-arguments'),
       this.helpColors.arguments('list-arguments'),
-      this.helpColors.flags('flags')
+      this.helpColors.flags('flags'),
+      this.helpColors.trailingArgs('trailing-args')
     )
 
     console.log(
@@ -453,6 +486,16 @@ export class NoArgProgram<
     console.log(
       '',
       'These are the options that you want to pass to the command. They are optional and can be changed.'
+    )
+
+    console.log('')
+    this.renderUsageUtils.printPointHeader(
+      this.helpColors.trailingArgs('trailing-args')
+    )
+    console.log(
+      '',
+      'These are the arguments that are passed to the command after the trailing-args separator. They are passed as is and are ignored by the program.',
+      colors.yellow(this.system.trailingArgsSeparator)
     )
   }
 
@@ -506,7 +549,29 @@ export class NoArgProgram<
     )
   }
 
-  private renderUsageConfiguration() {
+  private renderUsageProgramConfiguration() {
+    if (this.config.enableTrailingArgs) {
+      this.renderUsageUtils.printGroupHeader('Trailing Arguments is enabled')
+      this.renderUsageUtils.printValid(colors.yellow('--option'), 'value')
+      this.renderUsageUtils.printValid(
+        colors.yellow('--option'),
+        'value',
+        colors.yellow(this.system.trailingArgsSeparator),
+        'trailing-args'
+      )
+    } else {
+      this.renderUsageUtils.printGroupHeader('Trailing Arguments is disabled')
+      this.renderUsageUtils.printValid(colors.yellow('--option'), 'value')
+      this.renderUsageUtils.printInvalid(
+        colors.yellow('--option'),
+        'value',
+        colors.red(this.system.trailingArgsSeparator),
+        colors.red('trailing-args')
+      )
+    }
+  }
+
+  private renderUsageSystemConfiguration() {
     if (this.system.allowEqualAssign) {
       this.renderUsageUtils.printGroupHeader(
         'Options with equal value is enabled'
@@ -522,6 +587,46 @@ export class NoArgProgram<
       this.renderUsageUtils.printValid(colors.yellow('--option'), 'value')
       this.renderUsageUtils.printInvalid(
         colors.yellow('--option') + colors.blue('=') + 'value'
+      )
+    }
+
+    if (this.system.booleanNotSyntaxEnding) {
+      this.renderUsageUtils.printGroupHeader(
+        'Boolean not syntax ending is enabled'
+      )
+
+      this.renderUsageUtils.printValid(colors.yellow('--option'))
+      this.renderUsageUtils.printValid(
+        colors.yellow('--option' + this.system.booleanNotSyntaxEnding)
+      )
+    } else {
+      this.renderUsageUtils.printGroupHeader(
+        'Boolean not syntax ending is disabled'
+      )
+
+      this.renderUsageUtils.printValid(colors.yellow('--option'))
+      this.renderUsageUtils.printInvalid(
+        colors.red('--option' + this.system.booleanNotSyntaxEnding)
+      )
+    }
+
+    if (this.system.trailingArgsSeparator) {
+      this.renderUsageUtils.printGroupHeader(
+        'Configured trailing args separator (' +
+          colors.yellow(this.system.trailingArgsSeparator) +
+          ')'
+      )
+
+      this.config.enableTrailingArgs ||
+        this.renderUsageUtils.printPointHeader(
+          colors.red('Disabled for this specific program')
+        )
+
+      this.renderUsageUtils.printValid(
+        colors.yellow('--option'),
+        'value',
+        colors.yellow(this.system.trailingArgsSeparator),
+        'trailing-args'
       )
     }
 
@@ -634,8 +739,12 @@ export class NoArgProgram<
     this.renderUsageHowToUseOptions()
     console.log('')
 
-    console.log(colors.bold(colors.cyan('📝 Configuration:')))
-    this.renderUsageConfiguration()
+    console.log(colors.bold(colors.cyan('📝 Program Configuration:')))
+    this.renderUsageProgramConfiguration()
+    console.log('')
+
+    console.log(colors.bold(colors.cyan('📝 System Configuration:')))
+    this.renderUsageSystemConfiguration()
     console.log('')
   }
 }
@@ -669,9 +778,18 @@ export module NoArgProgram {
     args: [
       ...ExtractArguments<NonNullable<TOptions['arguments']>>,
       ...ExtractOptionalArguments<NonNullable<TOptions['optionalArguments']>>,
-      TOptions['listArgument'] extends {}
-        ? ExtractListArgument<NonNullable<TOptions['listArgument']>>
-        : []
+      ...(TOptions['listArgument'] extends {}
+        ? [
+            ListArguments: Prettify<
+              ExtractListArgument<NonNullable<TOptions['listArgument']>>
+            >
+          ]
+        : []),
+      ...(TConfig['enableTrailingArgs'] extends NonNullable<
+        NoArgCore.Config['enableTrailingArgs']
+      >
+        ? [TrailingArguments: string[]]
+        : [])
     ],
 
     flags: Prettify<
@@ -685,6 +803,7 @@ export module NoArgProgram {
       >
     >,
 
-    config: TConfig
+    config: TConfig,
+    system: TSystem
   ) => void
 }

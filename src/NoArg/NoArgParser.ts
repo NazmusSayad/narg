@@ -1,12 +1,13 @@
 import colors from '../lib/colors'
+import askCli from '../helpers/ask-cli'
 import { NoArgCore } from './NoArgCore'
 import { NoArgError } from './NoArgError'
+import { TSchema } from '../schema/type.t'
 import { isSchemaList } from '../schema/utils'
+import { TypeArray } from '../schema/TypeArray'
 import type { NoArgProgram } from './NoArgProgram'
 import { TypeBoolean } from '../schema/TypeBoolean'
-import { TSchema } from '../schema/type.t'
-import { TypeArray } from '../schema/TypeArray'
-import askCli from '../helpers/ask-cli'
+import splitTrailingArgs from '../utils/split-trailing-args'
 
 export class NoArgParser<
   TName extends string,
@@ -23,11 +24,26 @@ export class NoArgParser<
   }
 
   private divideArguments(args: string[]) {
+    const mainArgs = []
+    const trailingArgs = []
+
+    if (this.config.enableTrailingArgs) {
+      const [main, trailing] = splitTrailingArgs(
+        args,
+        this.system.trailingArgsSeparator
+      )
+
+      mainArgs.push(...main)
+      trailingArgs.push(...trailing)
+    } else {
+      mainArgs.push(...args)
+    }
+
     let isOptionReached = false
     const argList: string[] = []
     const options: NoArgParser.ParsedFlagRecord[] = []
 
-    for (let arg of args) {
+    for (let arg of mainArgs) {
       const result = this.getFlagMetadata(arg)
 
       if (
@@ -45,7 +61,7 @@ export class NoArgParser<
       options.push(result)
     }
 
-    return [argList, options] as const
+    return [argList, options, trailingArgs] as const
   }
 
   private findFlagInSchema(record: NoArgParser.ParsedFlagRecord) {
@@ -282,27 +298,30 @@ export class NoArgParser<
 
     const resultListArg: any[] = []
     if (this.options.listArgument) {
-      if (!this.options.listArgument.type) {
-        resultListArg.push(...args)
+      const arraySchema = new TypeArray({
+        schema: this.options.listArgument.type,
+        minLength: this.options.listArgument.minLength,
+        maxLength: this.options.listArgument.maxLength,
+      })
+
+      const { value, error, valid } = arraySchema.parse(args)
+
+      if (valid) {
+        resultListArg.push(...value)
+        args.length = 0
       } else {
-        const arraySchema = new TypeArray({
-          schema: this.options.listArgument.type,
-          minLength: this.options.listArgument.minLength,
-          maxLength: this.options.listArgument.maxLength,
-        })
-
-        const { value, error, valid } = arraySchema.parse(args)
-
-        if (valid) {
-          resultListArg.push(...value)
-        } else {
-          throw new NoArgError(
-            `${error} for list argument: ${colors.blue(
-              this.options.listArgument.name
-            )}`
-          )
-        }
+        throw new NoArgError(
+          `${error} for list argument: ${colors.blue(
+            this.options.listArgument.name
+          )}`
+        )
       }
+    }
+
+    if (args.length > 0) {
+      throw new NoArgError(
+        `Unexpected arguments: ${colors.green(args.join(' '))}`
+      )
     }
 
     return {
@@ -382,7 +401,7 @@ export class NoArgParser<
   }
 
   private async parseCore(args: string[]) {
-    const [argsList, optionsRecord] = this.divideArguments(args)
+    const [argsList, optionsRecord, trailingArgs] = this.divideArguments(args)
 
     const { resultArgs, resultOptArgs, resultListArg } =
       await this.parseArguments(argsList)
@@ -394,6 +413,7 @@ export class NoArgParser<
       flags: resultFlags,
       optArgs: resultOptArgs,
       listArgs: resultListArg,
+      trailingArgs: trailingArgs,
     }
   }
 

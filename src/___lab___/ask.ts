@@ -1,7 +1,6 @@
-import askCli from '../helpers/ask-cli'
-import schema from '../schema'
+import NoArg from '..'
 
-console.log(schema.string().toCase('lower').minLength(7).parse('HELLO'))
+console.log(NoArg.string().toCase('lower').minLength(7).parse('HELLO'))
 
 // askCli
 //   .string('What is your name?', {

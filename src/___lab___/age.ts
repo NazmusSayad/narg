@@ -1,4 +1,4 @@
-import NoArg, { t } from '../index'
+import NoArg from '..'
 
 NoArg.create('noarg', {
   description: 'NoArg is a simple library to create command line arguments',
@@ -15,8 +15,8 @@ NoArg.create('noarg', {
   // ],
 
   flags: {
-    demo: t.string().ask().default('John Doe').toCase('upper'),
-    nDemo: t.number(1, 2, 3).ask('What is your number?').default(1),
+    demo: NoArg.string().ask().default('John Doe').toCase('upper'),
+    nDemo: NoArg.number(1, 2, 3).ask('What is your number?').default(1),
 
     // name: t
     //   .tuple(

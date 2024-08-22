@@ -1,6 +1,12 @@
 import { NoArgCore } from './NoArgCore'
 import adminSymbol from './admin-symbol'
 import { NoArgProgram } from './NoArgProgram'
+import { TypeArray } from '../schema/TypeArray'
+import { TypeTuple } from '../schema/TypeTuple'
+import { TypeNumber } from '../schema/TypeNumber'
+import { TypeString } from '../schema/TypeString'
+import { TypeBoolean } from '../schema/TypeBoolean'
+import { TSchemaPrimitive } from '../schema/type.t'
 import { MergeObject, Prettify } from '../types/util.t'
 
 export class NoArgRoot<
@@ -23,6 +29,63 @@ export class NoArgRoot<
     }
 
     super(name, system, config, options as any)
+  }
+
+  static string<const T extends string[]>(...strings: T) {
+    const config = {} as any
+    if (strings.length) {
+      config.enum = new Set(strings)
+    }
+
+    return new TypeString(
+      config as T extends [] ? {} : { enum: Set<T[number]> }
+    )
+  }
+
+  static number<const T extends number[]>(...numbers: T) {
+    const config = {} as any
+    if (numbers.length) {
+      config.enum = new Set(numbers)
+    }
+
+    return new TypeNumber(
+      config as T extends [] ? {} : { enum: Set<T[number]> }
+    )
+  }
+
+  static boolean() {
+    return new TypeBoolean({})
+  }
+
+  /**
+   * ### ⚠️ Only available for flags.
+   */
+  static array<T extends TSchemaPrimitive>(schema: T) {
+    delete schema.config.aliases
+    delete schema.config.default
+    delete schema.config.required
+    delete schema.config.askQuestion
+    delete schema.config.description
+
+    const config = { schema }
+    return new TypeArray(config)
+  }
+
+  /**
+   * ### ⚠️ Only available for flags.
+   */
+  static tuple<T extends TSchemaPrimitive[]>(...schema: T) {
+    const config = {
+      schema: schema.map((s) => {
+        s.config.required = true
+        delete s.config.aliases
+        delete s.config.askQuestion
+        delete s.config.description
+
+        return s
+      }),
+    }
+    return new TypeTuple(config)
   }
 
   /**

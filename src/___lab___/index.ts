@@ -1,4 +1,2 @@
-// console.clear()
-import './age'
-// import './ask'
-// import './NoArg'
+console.clear()
+require('./traillingargs')

@@ -1,6 +1,6 @@
 {
   "name": "noarg",
-  "version": "3.0.12",
+  "version": "3.0.13",
   "scripts": {
     "build": "npmize build",
     "dev": "npmize dev --module cjs",
@@ -11,7 +11,8 @@
   "dependencies": {
     "@inquirer/prompts": "^5.3.8",
     "ansi-colors": "^4.1.3",
-    "cli-table3": "^0.6.5"
+    "cli-table3": "^0.6.5",
+    "utility-types": "^3.11.0"
   },
   "devDependencies": {
     "@types/node": "^22.4.0",

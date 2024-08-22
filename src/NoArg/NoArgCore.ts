@@ -71,9 +71,11 @@ export module NoArgCore {
 
   export type Options = {
     description?: string
+
     arguments: ArgumentsOptions[]
     optionalArguments: OptionalArgumentsOptions[]
     listArgument?: ListArgumentsOption
+
     flags: FlagOption
     globalFlags: FlagOption
   }
@@ -92,7 +94,7 @@ export module NoArgCore {
     allowDuplicateFlagForList: boolean
     allowDuplicateFlagForPrimitive?: boolean
     overwriteDuplicateFlagForList?: boolean
-    // splitListByComma?: string
+    splitListByComma?: boolean
   }
 
   export const defaultSystem = {

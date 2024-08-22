@@ -3,7 +3,7 @@ import askCli from '../helpers/ask-cli'
 import { NoArgCore } from './NoArgCore'
 import { NoArgError } from './NoArgError'
 import { TSchema } from '../schema/type.t'
-import { isSchemaList } from '../schema/utils'
+import { TypeTuple } from '../schema/TypeTuple'
 import { TypeArray } from '../schema/TypeArray'
 import type { NoArgProgram } from './NoArgProgram'
 import { TypeBoolean } from '../schema/TypeBoolean'
@@ -146,7 +146,10 @@ export class NoArgParser<
     ) => {
       const outputRecord = output[schemaKey]
 
-      if (isSchemaList(outputRecord.schema)) {
+      if (
+        outputRecord.schema instanceof TypeArray ||
+        outputRecord.schema instanceof TypeTuple
+      ) {
         if (this.system.allowDuplicateFlagForList) {
           if (!this.system.overwriteDuplicateFlagForList) return
           return (outputRecord.values = [])
@@ -349,7 +352,18 @@ export class NoArgParser<
         )
       }
 
-      const isList = isSchemaList(argValue.schema)
+      const isList =
+        argValue.schema instanceof TypeArray ||
+        argValue.schema instanceof TypeTuple
+
+      if (isList && this.system.splitListByComma) {
+        argValue.values = argValue.values.flatMap((value) =>
+          value
+            .split(/,/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        )
+      }
 
       if (!isList && argValue.values.length > 1) {
         throw new NoArgError(

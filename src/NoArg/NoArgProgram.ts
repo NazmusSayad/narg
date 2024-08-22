@@ -85,7 +85,7 @@ export class NoArgProgram<
         : MergeObject<
             TInnerOptions,
             {
-              readonly globalFlags: Prettify<
+              globalFlags: Prettify<
                 MergeObject<
                   TOptions['globalFlags'],
                   TInnerOptions['globalFlags']

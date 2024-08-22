@@ -43,28 +43,30 @@ const app = NoArg.create(commandName, commandConfig).on(commandHandler)
 ### Example
 
 ```javascript
+import NoArg from 'noarg'
+
 const app = NoArg.create('app', {
   description: 'This is a test program',
-  options: {
-    config: t.string().global().ask('Where is the config?'),
+  flags: {
+    config: NoArg.string().ask('Where is the config?'),
   },
   arguments: [
-    { name: 'arg-1', type: t.number() },
-    { name: 'arg-2', type: t.boolean() },
-    { name: 'arg-3', type: t.string() },
+    { name: 'arg-1', type: NoArg.number() },
+    { name: 'arg-2', type: NoArg.boolean() },
+    { name: 'arg-3', type: NoArg.string() },
   ],
   optionalArguments: [
-    { name: 'arg-4', type: t.string() },
-    { name: 'arg-5', type: t.boolean() },
+    { name: 'arg-4', type: NoArg.string() },
+    { name: 'arg-5', type: NoArg.boolean() },
   ],
   listArgument: {
     name: 'args',
-    type: t.string(),
+    type: NoArg.string(),
     minLength: 1,
     maxLength: 3,
   },
   config: {
-    useTrailingArgs: true,
+    enableTrailingArgs: true,
   },
   system: {},
 }).on(([arg1, arg2, arg3, optArg4, optArg5, listArg, trailingArgs], flags) => {
@@ -81,11 +83,31 @@ node app.js arg-1 arg-2 arg-3 optional-arg-1 listArg-1 listArg-2 --config config
 
 #### Types
 
-- `t.string()`: Defines an option of type string.
-- `t.number()`: Defines an option of type number.
-- `t.boolean()`: Defines an option of type boolean.
-- `t.array()`: Defines an option of type array. (Only available for options)
-- `t.tuple()`: Defines an option of type tuple. (Only available for options)
+- `NoArg.string()`: Defines an option of type string.
+- `NoArg.number()`: Defines an option of type number.
+- `NoArg.boolean()`: Defines an option of type boolean.
+- `NoArg.array()`: Defines an option of type array. (Only available for options)
+- `NoArg.tuple()`: Defines an option of type tuple. (Only available for options)
+
+### Use common config
+
+```ts
+const app = NoArg.create('app', {})
+
+const listArguments = {
+  name: 'list',
+  type: NoArg.boolean(),
+} as const
+
+const config = NoArg.createConfig({
+  arguments: [{ name: 'arg1', type: NoArg.string() }],
+  optionalArguments: [{ name: 'optArg1', type: NoArg.string() }],
+  listArguments,
+})
+
+app.create('dev', config)
+app.create('build', config)
+```
 
 ### Tips
 

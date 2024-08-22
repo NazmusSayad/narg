@@ -8,8 +8,6 @@ export class TypeString<
   name = 'string' as const
 
   checkType(value: string) {
-    value = value.trim()
-
     if (this.config.regex && !this.config.regex.test(value)) {
       return new ResultErr(
         `\`${value}\` doesn't match pattern ${this.config.regex}`

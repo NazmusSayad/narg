@@ -114,12 +114,7 @@ export class NoArgRoot<
    */
   static create<
     const TName extends string,
-    const TCreateConfig extends Prettify<
-      Partial<NoArgCore.Options> & {
-        config?: NoArgCore.Config
-        system?: Partial<NoArgCore.System>
-      }
-    >
+    const TCreateConfig extends NoArgRoot.CreateConfig
   >(name: TName, { config, system, ...options }: TCreateConfig) {
     system = { ...NoArgCore.defaultSystem, ...system }
     config = { ...config }
@@ -153,6 +148,16 @@ export class NoArgRoot<
   }
 
   /**
+   * Define the configuration for the program
+   * - This doesn't do anything except returning the config
+   * - This is a helper function to make the type inference better
+   * @param config The configuration for the program
+   */
+  static createConfig<const T extends NoArgRoot.CreateConfig>(config: T) {
+    return config
+  }
+
+  /**
    * Start the program
    * @param args The arguments to start the program with
    * @example
@@ -166,4 +171,11 @@ export class NoArgRoot<
   }
 }
 
-export module NoArgRoot {}
+export module NoArgRoot {
+  export type CreateConfig = Prettify<
+    Partial<NoArgCore.Options> & {
+      config?: NoArgCore.Config
+      system?: Partial<NoArgCore.System>
+    }
+  >
+}

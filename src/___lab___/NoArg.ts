@@ -24,9 +24,12 @@ const app = NoArgRoot.create('app', {
   },
   globalFlags: { silent: schema.string() },
   config: {},
-  // arguments: [
-  //   { name: 'root', type: schema.string().ask('who are you?').default('root') },
-  // ],
+  arguments: [
+    {
+      name: 'root',
+      type: schema.string().ask('who are you?').default('root'),
+    },
+  ],
   // optionalArguments: [{ name: 'nope', type: schema.number() }],
   // listArgument: { name: 'test', minLength: 2, maxLength: 3 },
 
@@ -37,7 +40,7 @@ const inner = app
   .create('inner', {
     description: 'This is an inner for app',
     config: { disableHelp: false },
-    arguments: [{ name: 'testsdf' }],
+    arguments: [{ name: 'testsdf', type: schema.number() }],
     listArgument: { name: 'test', type: schema.number() },
   })
   .on((result) => {
@@ -47,7 +50,7 @@ const inner = app
 const inner2 = app
   .create('inner2', {
     config: { disableHelp: false },
-    arguments: [{ name: 'testsdf' }],
+    arguments: [{ name: 'testsdf', type: schema.number() }],
     listArgument: { name: 'test', type: schema.number() },
   })
   .on(callback)
@@ -60,7 +63,7 @@ const superInner = inner
       // { name: 'joss3', type: schema.string(), askQuestion: 'who are you?' },
     ],
     optionalArguments: [{ name: 'nope', type: schema.string() }],
-    listArgument: { name: 'test' },
+    listArgument: { name: 'test', type: schema.number() },
     flags: {
       files: schema.array(schema.string()).aliases('f'),
       do: schema.boolean(),

@@ -5,11 +5,8 @@ import { isSchemaList } from '../schema/utils'
 import type { NoArgProgram } from './NoArgProgram'
 import { TypeBoolean } from '../schema/TypeBoolean'
 import { TSchema } from '../schema/type.t'
-import TypeTuple from '../schema/TypeTuple'
-import TypeArray from '../schema/TypeArray'
+import { TypeArray } from '../schema/TypeArray'
 import askCli from '../helpers/ask-cli'
-import TypeNumber from '../schema/TypeNumber'
-import TypeString from '../schema/TypeString'
 
 export class NoArgParser<
   TName extends string,
@@ -17,75 +14,6 @@ export class NoArgParser<
   TConfig extends NoArgCore.Config,
   TOptions extends NoArgCore.Options
 > extends NoArgCore<TName, TSystem, TConfig, TOptions> {
-  private askQuestion(schema: TSchema, msgPrefix?: string) {
-    function genMessage(defaultMsg: string) {
-      return [
-        msgPrefix && colors.reset(msgPrefix),
-        colors.bold(schema.config.askQuestion ?? defaultMsg),
-      ]
-        .filter(Boolean)
-        .join(' ')
-    }
-
-    if (schema instanceof TypeString) {
-      if (schema.config.enum) {
-        return askCli.select(genMessage(`Enter a string`), {
-          default: schema.config.default,
-          choices: [...schema.config.enum.values()],
-        })
-      }
-
-      return askCli.string(genMessage(`Enter a string`), {
-        default: schema.config.default,
-        required: true,
-      })
-    }
-
-    if (schema instanceof TypeNumber) {
-      if (schema.config.enum) {
-        return askCli.select(genMessage(`Enter a number`), {
-          default: schema.config.default,
-          choices: [...schema.config.enum.values()],
-        })
-      }
-
-      return askCli.number(genMessage(`Enter a number`), {
-        default: schema.config.default,
-        max: schema.config.max,
-        min: schema.config.min,
-        required: true,
-      })
-    }
-
-    if (schema instanceof TypeBoolean) {
-      return askCli.boolean(genMessage(`Enter a boolean`), {
-        default: schema.config.default,
-      })
-    }
-
-    if (schema instanceof TypeArray) {
-      return askCli.array(
-        genMessage(
-          `Enter an array of ${schema.config.schema.name ?? 'string'}`
-        ),
-        schema.config.schema.name
-      )
-    }
-
-    if (schema instanceof TypeTuple) {
-      return askCli.tuple(
-        genMessage(
-          `Enter a tuple of ${schema.config.schema.map(
-            (schema) => schema.name
-          )}`
-        ),
-        schema.config.schema.map((schema) => schema.name)
-      )
-    }
-
-    throw new NoArgError(`Asking question is not supported`)
-  }
-
   private browsePrograms([name, ...args]: string[]) {
     const program = this.programs.get(name)
     if (program) {
@@ -307,16 +235,13 @@ export class NoArgParser<
       const input = args.shift()
 
       if (!input) {
-        if (config.type?.config.askQuestion === undefined) {
+        if (config.type.config.askQuestion === undefined) {
           throw new NoArgError(
             `No value provided for argument: ${colors.blue(config.name)}`
           )
         }
 
-        const result = await this.askQuestion(
-          config.type,
-          colors.blue(config.name) + ':'
-        )
+        const result = await askCli(config.type, colors.blue(config.name) + ':')
 
         resultArgs.push(result as ArgsOutputType[number])
         continue
@@ -437,10 +362,7 @@ export class NoArgParser<
 
       if (!hasValue) {
         if (schema.config.askQuestion !== undefined) {
-          const value = await this.askQuestion(
-            schema,
-            colors.cyan(`--${key}`) + ':'
-          )
+          const value = await askCli(schema, colors.cyan(`--${key}`) + ':')
           output[key] = value
           continue
         }

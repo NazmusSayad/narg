@@ -9,8 +9,8 @@ import { CellValue } from 'cli-table3'
 import { NoArgCore } from './NoArgCore'
 import { NoArgError } from './NoArgError'
 import { NoArgParser } from './NoArgParser'
-import TypeArray from '../schema/TypeArray'
-import TypeTuple from '../schema/TypeTuple'
+import { TypeArray } from '../schema/TypeArray'
+import { TypeTuple } from '../schema/TypeTuple'
 import { CustomTable } from '../helpers/custom-table'
 import { TSchemaPrimitive, ExtractTypeOutput } from '../schema/type.t'
 import { Prettify, MergeObject, MakeObjectOptional } from '../types/util.t'
@@ -219,9 +219,9 @@ export class NoArgProgram<
       const { name, type } = argument
       tables.push([
         this.helpColors.arguments(name),
-        this.helpColors.type(type?.name ?? 'string'),
+        this.helpColors.type(type.name),
         this.helpColors.description(
-          type?.config.description ?? this.helpColors.emptyString
+          argument.description ?? this.helpColors.emptyString
         ),
       ])
     })
@@ -230,15 +230,16 @@ export class NoArgProgram<
       const { name, type } = argument
       tables.push([
         this.helpColors.arguments(name),
-        this.helpColors.type(type?.name ?? 'string') + '?',
+        this.helpColors.type(type.name) + '?',
         this.helpColors.description(
-          type?.config.description ?? this.helpColors.emptyString
+          argument.description ?? this.helpColors.emptyString
         ),
       ])
     })
 
     if (this.options.listArgument) {
-      const { name, type, minLength, maxLength } = this.options.listArgument
+      const { name, type, minLength, maxLength, description } =
+        this.options.listArgument
 
       const hasMinLength = minLength !== undefined
       const hasMaxLength = maxLength !== undefined
@@ -259,10 +260,8 @@ export class NoArgProgram<
 
       tables.push([
         this.helpColors.arguments(name),
-        this.helpColors.type(type?.name ?? 'string') + '[]' + minMaxLengthStr,
-        this.helpColors.description(
-          type?.config.description ?? this.helpColors.emptyString
-        ),
+        this.helpColors.type(type.name) + '[]' + minMaxLengthStr,
+        this.helpColors.description(description ?? this.helpColors.emptyString),
       ])
     }
 
@@ -647,18 +646,14 @@ export module NoArgProgram {
   }
 
   export type ExtractArguments<T extends ArgumentsOptions[]> = {
-    [K in keyof T]: T[K]['type'] extends TSchemaPrimitive
-      ? ExtractTypeOutput<T[K]['type']>
-      : string
+    [K in keyof T]: ExtractTypeOutput<T[K]['type']>
   }
 
   export type ExtractOptionalArguments<T extends OptionalArgumentsOptions[]> =
     Partial<ExtractArguments<T>>
 
   export type ExtractListArgument<T extends ListArgumentsOption> =
-    T['type'] extends TSchemaPrimitive
-      ? ExtractTypeOutput<T['type']>[]
-      : string[]
+    ExtractTypeOutput<T['type']>[]
 
   export type ExtractFlags<T extends FlagOption> = {
     [K in keyof T]:
@@ -674,7 +669,9 @@ export module NoArgProgram {
     args: [
       ...ExtractArguments<NonNullable<TOptions['arguments']>>,
       ...ExtractOptionalArguments<NonNullable<TOptions['optionalArguments']>>,
-      ExtractListArgument<NonNullable<TOptions['listArgument']>>
+      TOptions['listArgument'] extends {}
+        ? ExtractListArgument<NonNullable<TOptions['listArgument']>>
+        : []
     ],
 
     flags: Prettify<

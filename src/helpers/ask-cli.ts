@@ -1,128 +1,92 @@
 import colors from '../lib/colors'
+import { TSchema } from '../schema/type.t'
 import * as inquirer from '@inquirer/prompts'
+import { TypeTuple } from '../schema/TypeTuple'
+import { TypeArray } from '../schema/TypeArray'
+import { TypeNumber } from '../schema/TypeNumber'
+import { TypeString } from '../schema/TypeString'
+import { TypeBoolean } from '../schema/TypeBoolean'
 
-class AskCli {
-  private config = {
-    theme: { prefix: colors.reset('>') },
-    genTitle(message: string) {
-      return colors.bold(message)
-    },
-
-    genTitleWithPrefix(message: string) {
-      return `${colors.reset('>')} ${colors.bold(message)}`
-    },
-
-    genMessage(message: string, type: string) {
-      return `${this.genTitle(message)}\n${colors.reset.yellow(type)}:`
-    },
-  }
-
-  async string(
-    message: string,
-    options: {
-      default?: string
-      required?: boolean
-    } = {}
-  ) {
-    const result = await inquirer.input({
-      ...options,
-      theme: this.config.theme,
-      message: this.config.genMessage(message, 'string'),
-    })
-
-    return String(result)
-  }
-
-  async number(
-    message: string,
-    options: {
-      default?: number
-      required?: boolean
-      min?: number
-      max?: number
-    } = {}
-  ) {
-    const result = await inquirer.number({
-      ...options,
-      message: this.config.genMessage(message, 'number'),
-      theme: this.config.theme,
-    })
-
-    return Number(result)
-  }
-
-  async boolean(
-    message: string,
-    options: {
-      default?: boolean
-    } = {}
-  ) {
-    const result = await inquirer.confirm({
-      ...options,
-      message: this.config.genMessage(message, 'boolean'),
-    })
-
-    return Boolean(result)
-  }
-
-  async select(
-    message: string,
-    options: {
-      choices: unknown[]
-      default?: string
-    } = {
-      choices: [],
+const typePrompter = {
+  async string(schema: TypeString.Sample, prefix = '') {
+    if (schema.config.enum) {
+      return this.select('string:', Array.from(schema.config.enum))
     }
-  ) {
-    const result = await inquirer.select({
-      ...options,
-      message: message,
-      theme: this.config.theme,
-      choices: options.choices.map((choice) => ({
-        name: String(choice),
-        value: choice,
-      })),
+
+    let result
+    await inquirer.input({
+      theme: { prefix: '' },
+      message: prefix + colors.reset.yellow('string:'),
+      required: schema.config.required,
+      default: schema.config.default,
+
+      validate(input: string) {
+        if (!schema.config.required && !input) return true
+
+        const { value, error, valid } = schema.parse(input)
+        result = value
+        if (valid) return true
+        return error
+      },
+
+      transformer: schema.config.toCase
+        ? (value, { isFinal }) => {
+            const transformed =
+              schema.config.toCase === 'upper'
+                ? value.toUpperCase()
+                : schema.config.toCase === 'lower'
+                ? value.toLowerCase()
+                : value
+
+            return isFinal ? colors.reset.cyan(transformed) : transformed
+          }
+        : undefined,
     })
 
     return result
-  }
+  },
 
-  async array(
-    message: string,
-    type: 'string' | 'number' | 'boolean',
-    options: {
-      minLength?: number
-      maxLength?: number
-    } = {}
-  ) {
-    console.log(this.config.genTitleWithPrefix(message))
+  async number(schema: TypeNumber.Sample, prefix = '') {
+    if (schema.config.enum) {
+      return this.select('number:', Array.from(schema.config.enum))
+    }
+
+    let result
+    await inquirer.number({
+      theme: { prefix: '' },
+      message: prefix + colors.reset.yellow('number:'),
+      required: schema.config.required,
+      default: schema.config.default,
+
+      validate(input: any) {
+        const { value, error, valid } = schema.parse(input)
+        result = value
+        if (valid) return true
+        return error
+      },
+    })
+
+    return Number(result)
+  },
+
+  async boolean(schema: TypeBoolean.Sample, prefix = '') {
+    return inquirer.confirm({
+      theme: { prefix: '' },
+      default: schema.config.default,
+      message: prefix + colors.reset.yellow('boolean:'),
+    })
+  },
+
+  async array(schema: TypeArray.Sample) {
     const output: unknown[] = []
 
     while (true) {
-      const config = {
-        message: colors.reset(
-          `${colors.yellow(String(output.length + 1))}. ${colors.yellow(type)}:`
-        ),
-        theme: { prefix: '' },
-        validate(value: unknown) {
-          if (!value && output.length < (options.minLength ?? 0)) {
-            return `At least ${colors.yellow(
-              String(options.minLength)
-            )} item(s) required`
-          }
+      const fn = typePrompter[schema.config.schema.name]
+      const result = await fn(
+        schema.config.schema as any,
+        colors.reset.yellow(String(output.length + 1)) + '. '
+      )
 
-          return true
-        },
-      } as any
-
-      const fn =
-        type === 'string'
-          ? inquirer.input
-          : type === 'number'
-          ? inquirer.number
-          : inquirer.confirm
-
-      const result = await fn(config)
       if (result) output.push(result)
       else {
         const stopAddingItems = await inquirer.confirm({
@@ -133,39 +97,52 @@ class AskCli {
         if (stopAddingItems) break
       }
 
-      if (output.length >= (options.maxLength ?? Infinity)) break
+      if (output.length >= (schema.config.maxLength ?? Infinity)) break
     }
 
     return output
-  }
+  },
 
-  async tuple(message: string, types: ('string' | 'number' | 'boolean')[]) {
-    console.log(this.config.genTitleWithPrefix(message))
+  async tuple(schema: TypeTuple.Sample) {
     const output: unknown[] = []
 
-    for (const type of types) {
-      const config = {
-        message: colors.reset(
-          `${String(output.length + 1)}. ${colors.yellow(type)}:`
-        ),
+    for (const childSchema of schema.config.schema) {
+      const fn = typePrompter[childSchema.name]
+      const result = await fn(
+        childSchema as any,
+        colors.reset.yellow(String(output.length + 1)) + '. '
+      )
 
-        theme: { prefix: '' },
-        isRequired: true,
-      } as any
-
-      const fn =
-        type === 'string'
-          ? inquirer.input
-          : type === 'number'
-          ? inquirer.number
-          : inquirer.confirm
-
-      const result = await fn(config)
       output.push(result)
     }
 
     return output
-  }
+  },
+
+  async select(type: string, choices: unknown[]) {
+    const result = await inquirer.select({
+      theme: { prefix: '' },
+      message: colors.reset.yellow(type),
+      choices: choices.map((choice) => ({
+        name: String(choice),
+        value: choice,
+      })),
+    })
+
+    return result
+  },
 }
 
-export default new AskCli()
+export default function (schema: TSchema, prefix?: string) {
+  if (schema.name in typePrompter) {
+    console.log(
+      [prefix, colors.bold(schema.config.askQuestion ?? 'Enter a value:')]
+        .filter(Boolean)
+        .join(' ')
+    )
+
+    return typePrompter[schema.name](schema as any)
+  }
+
+  throw new Error(`Unknown schema type: ${schema.name}`)
+}

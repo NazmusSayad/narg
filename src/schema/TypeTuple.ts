@@ -1,13 +1,9 @@
 import { ResultErr, ResultOk } from './result'
 import { TSchemaPrimitive } from './type.t'
-import TypeCore, { TypeCoreConfig } from './TypeCore'
+import { TypeCore } from './TypeCore'
 
-export type TypeTupleConfig = TypeCoreConfig & {
-  schema: TSchemaPrimitive[]
-}
-
-export default class TypeTuple<
-  const TConfig extends TypeTupleConfig
+export class TypeTuple<
+  const TConfig extends TypeTuple.Config
 > extends TypeCore<TConfig> {
   name = 'tuple' as const
 
@@ -27,4 +23,9 @@ export default class TypeTuple<
 
     return new ResultOk((result as ResultOk[]).map((item) => item.value))
   }
+}
+
+export module TypeTuple {
+  export type Config = TypeCore.Config & { schema: TSchemaPrimitive[] }
+  export type Sample = TypeTuple<Config>
 }

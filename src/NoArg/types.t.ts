@@ -4,7 +4,8 @@ import { NoArgProgram } from './NoArgProgram'
 
 export type ArgumentsOptions = {
   name: string
-  type?: TSchemaPrimitive
+  type: TSchemaPrimitive
+  description?: string
 }
 
 export type OptionalArgumentsOptions = ArgumentsOptions & {}

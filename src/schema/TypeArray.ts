@@ -1,16 +1,10 @@
 import { Prettify } from '../types/util.t'
 import { ResultErr, ResultOk } from './result'
 import { TSchemaPrimitive } from './type.t'
-import TypeCore, { TypeCoreConfig } from './TypeCore'
+import { TypeCore } from './TypeCore'
 
-export type TypeArrayConfig = TypeCoreConfig &
-  Partial<{
-    minLength: number
-    maxLength: number
-  }> & { schema: TSchemaPrimitive }
-
-export default class TypeArray<
-  const TConfig extends TypeArrayConfig
+export class TypeArray<
+  const TConfig extends TypeArray.Config
 > extends TypeCore<TConfig> {
   name = 'array' as const
 
@@ -33,6 +27,9 @@ export default class TypeArray<
     return new ResultOk((result as ResultOk[]).map((item) => item.value))
   }
 
+  /**
+   * Sets the minimum length constraint for the array.
+   */
   minLength<TMinLength extends number>(
     minLength: TMinLength
   ): TypeArray<Prettify<TConfig & { minLength: TMinLength }>> {
@@ -40,10 +37,23 @@ export default class TypeArray<
     return this as any
   }
 
+  /**
+   * Sets the maximum length constraint for the array.
+   */
   maxLength<TMaxLength extends number>(
     maxLength: TMaxLength
   ): TypeArray<Prettify<TConfig & { maxLength: TMaxLength }>> {
     this.config.maxLength = maxLength
     return this as any
   }
+}
+
+export module TypeArray {
+  export type Config = TypeCore.Config &
+    Partial<{
+      minLength: number
+      maxLength: number
+    }> & { schema: TSchemaPrimitive }
+
+  export type Sample = TypeArray<Config>
 }

@@ -11,13 +11,13 @@ const tableWidth =
     ? MIN_WIDTH
     : terminalWidth
 
-type Test<TArray extends number[]> = {
+type CustomTableItems<TArray extends number[]> = {
   [K in keyof TArray]: K extends `${number}` ? CellValue : TArray[K]
 }
 
 export function CustomTable<const TWidths extends number[]>(
   widths: TWidths,
-  ...items: Test<TWidths>[]
+  ...items: CustomTableItems<TWidths>[]
 ) {
   const maxLength = Math.max(...items.map((item) => item.length))
   const totalWidth = widths.reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0

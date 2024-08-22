@@ -1,10 +1,8 @@
 import { ResultErr, ResultOk } from './result'
-import TypeCore, { TypeCoreConfig } from './TypeCore'
-
-export type TypeBooleanConfig = TypeCoreConfig & Partial<{}>
+import { TypeCore } from './TypeCore'
 
 export class TypeBoolean<
-  const TConfig extends TypeBooleanConfig
+  const TConfig extends TypeBoolean.Config
 > extends TypeCore<TConfig> {
   name = 'boolean' as const
 
@@ -15,4 +13,9 @@ export class TypeBoolean<
     if (value === 'false' || value === 'no') return new ResultOk(false)
     return new ResultErr(`\`${value}\` is not a valid boolean`)
   }
+}
+
+export module TypeBoolean {
+  export type Config = TypeCore.Config & Partial<{}>
+  export type Sample = TypeBoolean<Config>
 }

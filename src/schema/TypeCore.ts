@@ -3,15 +3,7 @@ import { ResultErr, ResultOk } from './result'
 import verifyOptionName from '../helpers/validate-flag-name'
 import { ParsedResult, ExtractTypeOutput, InferAndUpdateConfig } from './type.t'
 
-export type TypeCoreConfig = Partial<{
-  aliases: string[]
-  description: string
-  required: boolean
-  default: any
-  askQuestion: string
-}>
-
-export default class TypeCore<TConfig extends TypeCoreConfig> {
+export class TypeCore<TConfig extends TypeCore.Config> {
   name = 'core'
   constructor(public config: TConfig) {}
 
@@ -29,6 +21,11 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
     return new ResultErr("This type doesn't have a checkType method")
   }
 
+  /**
+   * ### ⚠️ When using both `default` and `ask`, you will still be prompted for a value.
+   * Sets a default value and marks the option as required.
+   * @param value The default value to set.
+   */
   default<TDefault extends ExtractTypeOutput<SELF>, SELF = typeof this>(
     value: TDefault
   ): InferAndUpdateConfig<
@@ -40,6 +37,11 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
     return this as any
   }
 
+  /**
+   * ### ⚠️ When using both `default` and `ask`, you will still be prompted for a value.
+   * Asks the user for a value if one is not provided.
+   * @param askQuestion The question to ask the user.
+   */
   ask<TDefault extends string, SELF = typeof this>(
     askQuestion?: TDefault
   ): InferAndUpdateConfig<
@@ -51,6 +53,11 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
     return this as any
   }
 
+  /**
+   * ### ⚠️ Only works for flags.
+   * Sets the aliases for the option.
+   * @param aliases The aliases to set.
+   */
   aliases<TAliases extends string[], SELF = typeof this>(
     ...aliases: TAliases
   ): InferAndUpdateConfig<
@@ -68,6 +75,10 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
     return this as any
   }
 
+  /**
+   * ### ⚠️ Only works for flags.
+   * Marks the option as required.
+   */
   required<SELF = typeof this>(): InferAndUpdateConfig<
     SELF,
     Prettify<MergeObject<TConfig, { required: true }>>
@@ -76,6 +87,10 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
     return this as any
   }
 
+  /**
+   * ### ⚠️ Only works for flags.
+   * Sets the description for the option.
+   */
   description<TDescription extends string, SELF = typeof this>(
     description: TDescription
   ): InferAndUpdateConfig<
@@ -85,4 +100,16 @@ export default class TypeCore<TConfig extends TypeCoreConfig> {
     this.config.description = description
     return this as any
   }
+}
+
+export module TypeCore {
+  export type Config = Partial<{
+    aliases: string[]
+    description: string
+    required: boolean
+    default: any
+    askQuestion: string
+  }>
+
+  export type Sample = TypeCore<Config>
 }

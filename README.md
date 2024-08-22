@@ -64,6 +64,7 @@ const app = NoArg.create('app', {
     maxLength: 3,
   },
   config: {},
+  system: {},
 }).on(([arg1, arg2, arg3, optArg4, optArg5, listArg], flags) => {
   console.log({ arg1, arg2, arg3, optArg4, optArg5, listArg })
   console.log(flags)

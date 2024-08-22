@@ -1,12 +1,12 @@
-import TypeArray, { TypeArrayConfig } from './TypeArray'
-import { TypeBoolean, TypeBooleanConfig } from './TypeBoolean'
-import { TypeCoreConfig } from './TypeCore'
-import TypeNumber, { TypeNumberConfig } from './TypeNumber'
-import TypeString, { TypeStringConfig } from './TypeString'
-import TypeTuple, { TypeTupleConfig } from './TypeTuple'
+import { TypeArray } from './TypeArray'
+import { TypeBoolean } from './TypeBoolean'
+import { TypeCore } from './TypeCore'
+import { TypeNumber } from './TypeNumber'
+import { TypeString } from './TypeString'
+import { TypeTuple } from './TypeTuple'
 
 export type CombineConfig<T, U> = T & {
-  config: TypeCoreConfig & U
+  config: TypeCore.Config & U
 }
 
 export type ParsedResult<T, U> =
@@ -14,13 +14,11 @@ export type ParsedResult<T, U> =
   | { value: null; error: U; valid: false }
 
 export type TSchemaPrimitive =
-  | TypeString<TypeStringConfig>
-  | TypeNumber<TypeNumberConfig>
-  | TypeBoolean<TypeBooleanConfig>
+  | TypeString.Sample
+  | TypeNumber.Sample
+  | TypeBoolean.Sample
 
-export type TSchemaList =
-  | TypeArray<TypeArrayConfig>
-  | TypeTuple<TypeTupleConfig>
+export type TSchemaList = TypeArray.Sample | TypeTuple.Sample
 
 export type TSchema = TSchemaPrimitive | TSchemaList
 

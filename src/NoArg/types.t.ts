@@ -1,6 +1,6 @@
-import { TSchema, TSchemaPrimitive } from '../schema/type.t'
 import { NoArgCoreHelper } from './NoArgCore'
-import { NoArgProgram } from './NoArgProgram'
+import { TSchema, TSchemaPrimitive } from '../schema/type.t'
+import { NoArgProgram, NoArgProgramHelper } from './NoArgProgram'
 
 export type ArgumentsOptions = {
   name: string
@@ -22,7 +22,7 @@ export type NoArgProgramMap = Map<
   NoArgProgram<
     string,
     NoArgCoreHelper.System,
-    NoArgProgram.Config,
+    NoArgProgramHelper.Config,
     NoArgCoreHelper.Options
   >
 >

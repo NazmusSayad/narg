@@ -48,26 +48,9 @@ export class NoArgProgram<
   public create<
     const TName extends string,
     const TCreateOptionsWithConfig extends Partial<NoArgCore.Options> & {
-      config?: NoArgProgram.Config
+      config?: Partial<NoArgProgram.Config>
     }
   >(name: TName, { config, ...options }: TCreateOptionsWithConfig) {
-    config = {
-      ...this.config,
-      ...config,
-    }
-
-    options = {
-      ...NoArgCore.defaultOptions,
-      ...options,
-    }
-
-    if (!config.skipGlobalFlags) {
-      options.globalFlags = {
-        ...this.options.globalFlags,
-        ...(options.globalFlags as any),
-      }
-    }
-
     type TInnerConfig = NonNullable<TCreateOptionsWithConfig['config']>
     type TInnerOptions = Omit<
       TCreateOptionsWithConfig,
@@ -94,12 +77,33 @@ export class NoArgProgram<
             }
           >
 
-    const child = new NoArgProgram<
-      TName,
-      TSystem,
-      Prettify<MergeObject<TConfig, TInnerConfig>>,
-      Prettify<Required<TInnerOptionsWithGlobalFlags>>
-    >(name, this.system, config as any, options as any, this)
+    type TChildConfig = Prettify<Required<MergeObject<TConfig, TInnerConfig>>>
+    type TChildOptions = Prettify<Required<TInnerOptionsWithGlobalFlags>>
+
+    const newConfig = {
+      ...this.config,
+      ...config,
+    } as unknown as TChildConfig
+
+    const optionsWithDefault = {
+      ...NoArgCore.defaultOptions,
+      ...options,
+    } as unknown as TChildOptions
+
+    if (!newConfig.skipGlobalFlags) {
+      optionsWithDefault.globalFlags = {
+        ...this.options.globalFlags,
+        ...(optionsWithDefault.globalFlags as any),
+      }
+    }
+
+    const child = new NoArgProgram<TName, TSystem, TChildConfig, TChildOptions>(
+      name,
+      this.system,
+      newConfig,
+      optionsWithDefault,
+      this
+    )
 
     this.programs.set(name, child as any)
     return child
@@ -196,7 +200,7 @@ export class NoArgProgram<
 
     if (this.config.enableTrailingArgs) {
       commandItems.push(
-        this.helpColors.description(this.system.trailingArgsSeparator),
+        this.helpColors.description(this.config.trailingArgsSeparator),
         this.helpColors.description('[...trailing-args]')
       )
     }
@@ -395,7 +399,7 @@ export class NoArgProgram<
       console.log('')
     }
 
-    if (!this.config.disableHelp) {
+    if (!this.config.help) {
       console.log(colors.bold('Tips:'))
       console.log(
         ' Use',
@@ -495,7 +499,7 @@ export class NoArgProgram<
     console.log(
       '',
       'These are the arguments that are passed to the command after the trailing-args separator. They are passed as is and are ignored by the program.',
-      colors.yellow(this.system.trailingArgsSeparator)
+      colors.yellow(this.config.trailingArgsSeparator)
     )
   }
 
@@ -556,7 +560,7 @@ export class NoArgProgram<
       this.renderUsageUtils.printValid(
         colors.yellow('--option'),
         'value',
-        colors.yellow(this.system.trailingArgsSeparator),
+        colors.yellow(this.config.trailingArgsSeparator),
         'trailing-args'
       )
     } else {
@@ -565,7 +569,7 @@ export class NoArgProgram<
       this.renderUsageUtils.printInvalid(
         colors.yellow('--option'),
         'value',
-        colors.red(this.system.trailingArgsSeparator),
+        colors.red(this.config.trailingArgsSeparator),
         colors.red('trailing-args')
       )
     }
@@ -607,26 +611,6 @@ export class NoArgProgram<
       this.renderUsageUtils.printValid(colors.yellow('--option'))
       this.renderUsageUtils.printInvalid(
         colors.red('--option' + this.system.booleanNotSyntaxEnding)
-      )
-    }
-
-    if (this.system.trailingArgsSeparator) {
-      this.renderUsageUtils.printGroupHeader(
-        'Configured trailing args separator (' +
-          colors.yellow(this.system.trailingArgsSeparator) +
-          ')'
-      )
-
-      this.config.enableTrailingArgs ||
-        this.renderUsageUtils.printPointHeader(
-          colors.red('Disabled for this specific program')
-        )
-
-      this.renderUsageUtils.printValid(
-        colors.yellow('--option'),
-        'value',
-        colors.yellow(this.system.trailingArgsSeparator),
-        'trailing-args'
       )
     }
 

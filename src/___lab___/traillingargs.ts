@@ -19,11 +19,10 @@ const app = NoArg.create('app', {
 
   config: {
     enableTrailingArgs: true,
-  },
-
-  system: {
     trailingArgsSeparator: '-',
   },
+
+  system: {},
 })
 
 app.on((args, flags, config) => {

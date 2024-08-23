@@ -7,7 +7,7 @@ import { TypeNumber } from '../schema/TypeNumber'
 import { TypeString } from '../schema/TypeString'
 import { TypeBoolean } from '../schema/TypeBoolean'
 import { TSchemaPrimitive } from '../schema/type.t'
-import { MergeObject, Prettify } from '../types/util.t'
+import { MergeObject, MergeObjectPrettify, Prettify } from '../types/util.t'
 
 export class NoArgRoot<
   TName extends string,
@@ -116,34 +116,40 @@ export class NoArgRoot<
     const TName extends string,
     const TCreateConfig extends NoArgRoot.CreateConfig
   >(name: TName, { config, system, ...options }: TCreateConfig) {
-    system = { ...NoArgCore.defaultSystem, ...system }
-    config = { ...config }
-
-    type TSystem = MergeObject<
+    type TSystem = MergeObjectPrettify<
       NoArgCore.DefaultSystem,
       Required<NonNullable<TCreateConfig['system']>>
     >
 
-    type TOptions = MergeObject<
-      NoArgCore.DefaultOptions,
-      Omit<TCreateConfig, 'config' | 'system'>
+    type TConfig = MergeObjectPrettify<
+      NoArgCore.DefaultConfig,
+      Required<NonNullable<TCreateConfig['config']>>
     >
 
-    type TConfig = NonNullable<TCreateConfig['config']>
-    return new NoArgRoot<
-      TName,
-      Prettify<TSystem>,
-      Prettify<TConfig>,
-      Prettify<Required<TOptions>>
-    >(
+    type TOptions = Prettify<
+      Required<
+        MergeObject<
+          NoArgCore.DefaultOptions,
+          Omit<TCreateConfig, 'config' | 'system'>
+        >
+      >
+    >
+
+    return new NoArgRoot<TName, TSystem, TConfig, TOptions>(
       adminSymbol,
       name,
-      system as any,
-      config as any,
+      {
+        ...NoArgCore.defaultSystem,
+        ...system,
+      } as TSystem,
+      {
+        ...NoArgCore.defaultConfig,
+        ...config,
+      } as TConfig,
       {
         ...NoArgCore.defaultOptions,
         ...options,
-      } as any
+      } as unknown as TOptions
     )
   }
 
@@ -154,7 +160,7 @@ export class NoArgRoot<
    * @param config The configuration for the program
    */
   static createConfig<const T extends NoArgRoot.CreateConfig>(config: T) {
-    return config
+    return config as Prettify<T>
   }
 
   /**
@@ -174,7 +180,7 @@ export class NoArgRoot<
 export module NoArgRoot {
   export type CreateConfig = Prettify<
     Partial<NoArgCore.Options> & {
-      config?: NoArgCore.Config
+      config?: Partial<NoArgCore.Config>
       system?: Partial<NoArgCore.System>
     }
   >

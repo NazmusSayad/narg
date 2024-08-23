@@ -6,6 +6,7 @@ import {
   OptionalArgumentsOptions,
 } from './types.t'
 import validateFlagName from '../helpers/validate-flag-name'
+import { MergeObject, Prettify } from '../types/util.t'
 
 export class NoArgCore<
   TName extends string,
@@ -35,8 +36,8 @@ export class NoArgCore<
     }
 
     this.validateNonEmptyString(
-      system.trailingArgsSeparator,
-      'system.trailingArgsSeparator'
+      config.trailingArgsSeparator,
+      'config.trailingArgsSeparator'
     )
 
     options.flags = Object.fromEntries(
@@ -65,20 +66,24 @@ export class NoArgCore<
 
 export module NoArgCore {
   export type Config = {
-    disableHelp?: boolean
+    help: boolean
     enableTrailingArgs?: boolean
+    trailingArgsSeparator: string
   }
 
   export type Options = {
     description?: string
-
+    listArgument?: ListArgumentsOption
     arguments: ArgumentsOptions[]
     optionalArguments: OptionalArgumentsOptions[]
-    listArgument?: ListArgumentsOption
-
     flags: FlagOption
     globalFlags: FlagOption
   }
+
+  export const defaultConfig = {
+    help: true,
+    trailingArgsSeparator: '--',
+  } as const
 
   export const defaultOptions = {
     arguments: [] as [],
@@ -89,7 +94,6 @@ export module NoArgCore {
 
   export type System = {
     allowEqualAssign: boolean
-    trailingArgsSeparator: string
     booleanNotSyntaxEnding: string | false
     allowDuplicateFlagForList: boolean
     allowDuplicateFlagForPrimitive?: boolean
@@ -99,14 +103,15 @@ export module NoArgCore {
 
   export const defaultSystem = {
     allowEqualAssign: true,
-    trailingArgsSeparator: '--',
     allowDuplicateFlagForList: true,
     booleanNotSyntaxEnding: '\\',
   } as const
 
+  export type DefaultConfig = typeof defaultConfig
   export type DefaultSystem = typeof defaultSystem
   export type DefaultOptions = typeof NoArgCore.defaultOptions
 
+  defaultConfig satisfies Config
   defaultSystem satisfies System
   defaultOptions satisfies Options
 }

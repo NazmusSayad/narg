@@ -37,7 +37,7 @@ const app = NoArg.create('app', {
 const inner = app
   .create('inner', {
     description: 'This is an inner for app',
-    config: { disableHelp: false },
+    config: { help: false },
     arguments: [{ name: 'testsdf', type: NoArg.number() }],
     listArgument: { name: 'test', type: NoArg.number() },
   })
@@ -47,7 +47,7 @@ const inner = app
 
 const inner2 = app
   .create('inner2', {
-    config: { disableHelp: false },
+    config: { help: false },
     arguments: [{ name: 'testsdf', type: NoArg.number() }],
     listArgument: { name: 'test', type: NoArg.number() },
   })
@@ -68,7 +68,7 @@ const superInner = inner
       no: NoArg.boolean(),
       test: NoArg.string('1', '2').ask('test'),
     },
-    config: { disableHelp: false },
+    config: { help: false },
   })
   .on((args, flags) => {
     console.log({ args, flags })

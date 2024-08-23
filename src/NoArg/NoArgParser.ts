@@ -30,7 +30,7 @@ export class NoArgParser<
     if (this.config.enableTrailingArgs) {
       const [main, trailing] = splitTrailingArgs(
         args,
-        this.system.trailingArgsSeparator
+        this.config.trailingArgsSeparator
       )
 
       mainArgs.push(...main)
@@ -436,7 +436,7 @@ export class NoArgParser<
   ): ReturnType<typeof this.parseCore> | void {
     if (this.browsePrograms(args)) return
 
-    if (!this.config.disableHelp) {
+    if (!this.config.help) {
       const self = this as unknown as NoArgProgram<any, any, any, any>
 
       args.forEach((arg) => {

@@ -1,4 +1,38 @@
 import NoArg from '..'
+const devAndBuild = NoArg.createConfig({
+  optionalArguments: [
+    {
+      name: 'root',
+      type: NoArg.string().description('Root directory'),
+    },
+    {
+      name: 'root',
+      type: NoArg.string().description('Root directory'),
+    },
+    {
+      name: 'root',
+      type: NoArg.string().description('Root directory'),
+    },
+  ],
+
+  flags: {
+    module: NoArg.string('cjs', 'mjs')
+      .aliases('m')
+      .description("Output module's type"),
+
+    outDir: NoArg.string().aliases('o').description('Output directory'),
+
+    node: NoArg.boolean()
+      .aliases('n')
+      .default(false)
+      .description('Enable __dirname and __filename in ES modules'),
+  },
+
+  config: {
+    enableTrailingArgs: true,
+    trailingArgsSeparator: '--tsc',
+  },
+})
 
 const app = NoArg.create('app', {
   flags: {
@@ -17,17 +51,22 @@ const app = NoArg.create('app', {
     maxLength: 1,
   },
 
-  config: {
-    enableTrailingArgs: true,
-    trailingArgsSeparator: '-',
-  },
-
   system: {},
 })
 
-app.on((args, flags, config) => {
+const child = app.create('child', {
+  listArgument: {
+    name: 'super',
+    description: 'List of items',
+    type: NoArg.string(),
+  },
+
+  ...devAndBuild,
+})
+
+child.on((args, flags, config) => {
   console.log(args)
   console.log(flags)
 })
 
-app.start(['1', '1', '2', '--A', 'hello', '--b', '123', '-', '2', '3', '4'])
+app.start(['child', '--tsc', 'boom'])

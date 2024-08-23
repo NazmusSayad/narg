@@ -1,2 +1,2 @@
 console.clear()
-require('./custom')
+require('./traillingargs')

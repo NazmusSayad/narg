@@ -2,7 +2,7 @@ import colors from '../lib/colors'
 import askCli from '../helpers/ask-cli'
 import { NoArgCore } from './NoArgCore'
 import { NoArgError } from './NoArgError'
-import { TSchema } from '../schema/type.t'
+import { TSchema, TSchemaPrimitive } from '../schema/type.t'
 import { TypeTuple } from '../schema/TypeTuple'
 import { TypeArray } from '../schema/TypeArray'
 import type { NoArgProgram } from './NoArgProgram'
@@ -266,11 +266,6 @@ export class NoArgParser<
         continue
       }
 
-      if (!config.type) {
-        resultArgs.push(input)
-        continue
-      }
-
       const { value, error, valid } = config.type.parse(input)
       if (valid) {
         resultArgs.push(value)
@@ -280,24 +275,15 @@ export class NoArgParser<
       throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
     }
 
-    const resultOptArgs: ArgsOutputType = []
-    for (const config of this.options.optionalArguments) {
-      if (args.length === 0) break
-      const input = args.shift()!
+    const resultOptArgs = this.options.optionalArguments.map((config) => {
+      const input = args.shift()
+      if (!input) return
 
-      if (!config.type) {
-        resultOptArgs.push(input)
-        continue
-      }
-
-      const { value, error, valid } = config.type.parse(input)
-      if (valid) {
-        resultOptArgs.push(value)
-        continue
-      }
+      const { value, error, valid } = config.type.parse<TSchemaPrimitive>(input)
+      if (valid) return value
 
       throw new NoArgError(`${error} for argument: ${colors.blue(config.name)}`)
-    }
+    })
 
     const resultListArg: any[] = []
     if (this.options.listArgument) {

@@ -1,13 +1,14 @@
 import { ResultErr, ResultOk } from './result'
 import { TSchemaPrimitive } from './type.t'
 import { TypeCore } from './TypeCore'
+import { TypeString } from './TypeString'
 
 export class TypeTuple<
   const TConfig extends TypeTuple.Config
 > extends TypeCore<TConfig> {
   name = 'tuple' as const
 
-  checkType(value: string[]) {
+  protected checkType(value: string[]) {
     if (!Array.isArray(value)) {
       return new ResultErr('Expected a tuple')
     }
@@ -16,7 +17,11 @@ export class TypeTuple<
       return new ResultErr(`Expected ${this.config.schema.length} items`)
     }
 
-    const result = value.map((item, i) => this.config.schema[i].checkType(item))
+    const result = value.map((item, i) => {
+      const schema = this.config.schema[i] as TypeString.Sample
+      return schema['checkType'](item)
+    })
+
     for (let item of result) {
       if (item instanceof ResultErr) return item
     }

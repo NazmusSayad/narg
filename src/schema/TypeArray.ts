@@ -2,13 +2,14 @@ import { Prettify } from '../types/util.t'
 import { ResultErr, ResultOk } from './result'
 import { TSchemaPrimitive } from './type.t'
 import { TypeCore } from './TypeCore'
+import { TypeString } from './TypeString'
 
 export class TypeArray<
   const TConfig extends TypeArray.Config
 > extends TypeCore<TConfig> {
   name = 'array' as const
 
-  checkType(value: string[]) {
+  protected checkType(value: string[]) {
     if (!Array.isArray(value)) {
       return new ResultErr('Expected an array of ' + this.config.schema.name)
     }
@@ -19,7 +20,11 @@ export class TypeArray<
       return new ResultErr(`Maximum ${this.config.maxLength} items expected`)
     }
 
-    const result = value.map((item) => this.config.schema.checkType(item))
+    const result = value.map((item) => {
+      const schema = this.config.schema as TypeString.Sample
+      return schema['checkType'](item)
+    })
+
     for (let item of result) {
       if (item instanceof ResultErr) return item
     }

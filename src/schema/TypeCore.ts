@@ -17,7 +17,7 @@ export class TypeCore<TConfig extends TypeCore.Config> {
     return { value: result.value, error: null, valid: true }
   }
 
-  checkType(_: unknown): ResultOk | ResultErr {
+  protected checkType(_: unknown): ResultOk | ResultErr {
     return new ResultErr("This type doesn't have a checkType method")
   }
 

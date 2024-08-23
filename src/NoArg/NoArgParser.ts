@@ -1,6 +1,6 @@
 import colors from '../lib/colors'
 import askCli from '../helpers/ask-cli'
-import { NoArgCore } from './NoArgCore'
+import { NoArgCore, NoArgCoreHelper } from './NoArgCore'
 import { NoArgError } from './NoArgError'
 import { TSchema, TSchemaPrimitive } from '../schema/type.t'
 import { TypeTuple } from '../schema/TypeTuple'
@@ -11,9 +11,9 @@ import splitTrailingArgs from '../utils/split-trailing-args'
 
 export class NoArgParser<
   TName extends string,
-  TSystem extends NoArgCore.System,
-  TConfig extends NoArgCore.Config,
-  TOptions extends NoArgCore.Options
+  TSystem extends NoArgCoreHelper.System,
+  TConfig extends NoArgCoreHelper.Config,
+  TOptions extends NoArgCoreHelper.Options
 > extends NoArgCore<TName, TSystem, TConfig, TOptions> {
   private browsePrograms([name, ...args]: string[]) {
     const program = this.programs.get(name)
@@ -27,7 +27,7 @@ export class NoArgParser<
     const mainArgs = []
     const trailingArgs = []
 
-    if (this.config.enableTrailingArgs) {
+    if (this.options.enableTrailingArgs) {
       const [main, trailing] = splitTrailingArgs(
         args,
         this.config.trailingArgsSeparator
@@ -41,7 +41,7 @@ export class NoArgParser<
 
     let isOptionReached = false
     const argList: string[] = []
-    const options: NoArgParser.ParsedFlagRecord[] = []
+    const options: NoArgParserHelper.ParsedFlagRecord[] = []
 
     for (let arg of mainArgs) {
       const result = this.getFlagMetadata(arg)
@@ -64,7 +64,7 @@ export class NoArgParser<
     return [argList, options, trailingArgs] as const
   }
 
-  private findFlagInSchema(record: NoArgParser.ParsedFlagRecord) {
+  private findFlagInSchema(record: NoArgParserHelper.ParsedFlagRecord) {
     const combinedFlags = { ...this.options.globalFlags, ...this.options.flags }
 
     if (record.argType === 'flag') {
@@ -83,9 +83,9 @@ export class NoArgParser<
     throw new NoArgError(`Unknown option ${colors.red(record.arg)} entered`)
   }
 
-  private getFlagMetadata(rawArg: string): NoArgParser.ParsedFlagRecord {
-    const isFlag = NoArgParser.flagRegex.test(rawArg)
-    const isAlias = NoArgParser.flagAliasRegex.test(rawArg)
+  private getFlagMetadata(rawArg: string): NoArgParserHelper.ParsedFlagRecord {
+    const isFlag = NoArgParserHelper.flagRegex.test(rawArg)
+    const isAlias = NoArgParserHelper.flagAliasRegex.test(rawArg)
     const argType = isFlag
       ? ('flag' as const)
       : isAlias
@@ -97,7 +97,7 @@ export class NoArgParser<
     let hasBooleanEndValue
 
     if (key) {
-      const hasValue = NoArgParser.optionWithValueRegex.test(key)
+      const hasValue = NoArgParserHelper.optionWithValueRegex.test(key)
 
       if (hasValue) {
         if (!this.system.allowEqualAssign) {
@@ -107,7 +107,7 @@ export class NoArgParser<
         }
 
         const { value: _value = null, key: _key = null } =
-          key.match(NoArgParser.optionWithValueRegex)?.groups ?? {}
+          key.match(NoArgParserHelper.optionWithValueRegex)?.groups ?? {}
 
         key = _key
         value = _value
@@ -128,20 +128,20 @@ export class NoArgParser<
       value,
       argType,
       hasBooleanEndValue,
-    } as NoArgParser.ParsedFlagRecord
+    } as NoArgParserHelper.ParsedFlagRecord
   }
 
   private checkRecordFactory(
-    output: Record<string, NoArgParser.ParsedFlagWithSchema>
+    output: Record<string, NoArgParserHelper.ParsedFlagWithSchema>
   ) {
     let mustHaveAnyValue = false
-    let prevSchemaKeyRecord: NoArgParser.ParsedFlagRecord & {
+    let prevSchemaKeyRecord: NoArgParserHelper.ParsedFlagRecord & {
       schemaKey: string
       schema: TSchema
     }
 
     const handleDuplicateValue = (
-      record: NoArgParser.ParsedFlagRecord,
+      record: NoArgParserHelper.ParsedFlagRecord,
       schemaKey: string
     ) => {
       const outputRecord = output[schemaKey]
@@ -166,7 +166,7 @@ export class NoArgParser<
     }
 
     const handleBooleanEndValue = (
-      record: NoArgParser.ParsedFlagRecord,
+      record: NoArgParserHelper.ParsedFlagRecord,
       schema: TSchema
     ) => {
       if (schema instanceof TypeBoolean) record.value = 'false'
@@ -191,7 +191,7 @@ export class NoArgParser<
       )
     }
 
-    return (record: NoArgParser.ParsedFlagRecord) => {
+    return (record: NoArgParserHelper.ParsedFlagRecord) => {
       if (record.argType === 'flag' || record.argType === 'alias') {
         const { schemaKey, schema } = this.findFlagInSchema(record)
 
@@ -226,7 +226,7 @@ export class NoArgParser<
     }
   }
 
-  private parseFlagsCore(records: NoArgParser.ParsedFlagRecord[]) {
+  private parseFlagsCore(records: NoArgParserHelper.ParsedFlagRecord[]) {
     if (records.length === 0) return {}
     if (records[0].argType === 'value') {
       throw new NoArgError(
@@ -237,7 +237,7 @@ export class NoArgParser<
       )
     }
 
-    const output = {} as Record<string, NoArgParser.ParsedFlagWithSchema>
+    const output = {} as Record<string, NoArgParserHelper.ParsedFlagWithSchema>
     const next = this.checkRecordFactory(output)
     records.forEach(next)
     return output
@@ -245,8 +245,6 @@ export class NoArgParser<
 
   private async parseArguments(args: string[]) {
     args = [...args]
-    this.options.arguments ??= []
-    this.options.optionalArguments ??= []
     type ArgsOutputType = (string | number | boolean)[]
 
     const resultArgs: ArgsOutputType = []
@@ -320,7 +318,7 @@ export class NoArgParser<
     }
   }
 
-  private async parseFlags(records: NoArgParser.ParsedFlagRecord[]) {
+  private async parseFlags(records: NoArgParserHelper.ParsedFlagRecord[]) {
     const flagsRecordWithSchema = this.parseFlagsCore(records)
     const output: Record<string, any> = {}
 
@@ -441,7 +439,7 @@ export class NoArgParser<
   }
 }
 
-export module NoArgParser {
+export module NoArgParserHelper {
   export type ParsedFlagRecord = {
     arg: string
   } & (
@@ -462,7 +460,7 @@ export module NoArgParser {
     arg: string
     schema: TSchema
     values: string[]
-    argType: Exclude<NoArgParser.ParsedFlagRecord['argType'], 'value'>
+    argType: Exclude<NoArgParserHelper.ParsedFlagRecord['argType'], 'value'>
   }
 
   export const flagRegex = /^(\-\-)([^\-])/

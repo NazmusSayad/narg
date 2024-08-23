@@ -1,20 +1,20 @@
 import colors from '../lib/colors'
-import { NoArgCore } from './NoArgCore'
 import adminSymbol from './admin-symbol'
-import { NoArgProgram } from './NoArgProgram'
+import { NoArgCoreHelper } from './NoArgCore'
 import { TypeArray } from '../schema/TypeArray'
 import { TypeTuple } from '../schema/TypeTuple'
 import { TypeNumber } from '../schema/TypeNumber'
 import { TypeString } from '../schema/TypeString'
 import { TypeBoolean } from '../schema/TypeBoolean'
 import { TSchemaPrimitive } from '../schema/type.t'
+import { NoArgProgram, NoArgProgramHelper } from './NoArgProgram'
 import { MergeObject, MergeObjectPrettify, Prettify } from '../types/util.t'
 
 export class NoArgRoot<
   TName extends string,
-  TSystem extends NoArgCore.System,
-  TConfig extends NoArgProgram.Config,
-  TOptions extends NoArgCore.Options
+  TSystem extends NoArgCoreHelper.System,
+  TConfig extends NoArgProgramHelper.Config,
+  TOptions extends NoArgCoreHelper.Options
 > extends NoArgProgram<TName, TSystem, TConfig, TOptions> {
   static colors = {
     disable() {
@@ -25,6 +25,12 @@ export class NoArgRoot<
     },
   }
 
+  /**
+   * Create a new string schema
+   * @param strings You can enter a fixed set of strings
+   * @example
+   * NoArg.string('a', 'b', 'c') // Only 'a', 'b', 'c' are allowed
+   */
   static string<const T extends string[]>(...strings: T) {
     const config = {} as any
     if (strings.length) {
@@ -36,6 +42,12 @@ export class NoArgRoot<
     )
   }
 
+  /**
+   * Create a new number schema
+   * @param numbers You can enter a fixed set of numbers
+   * @example
+   * NoArg.number(1, 2, 3) // Only 1, 2, 3 are allowed
+   */
   static number<const T extends number[]>(...numbers: T) {
     const config = {} as any
     if (numbers.length) {
@@ -111,19 +123,19 @@ export class NoArgRoot<
     const TCreateConfig extends NoArgRoot.CreateConfig
   >(name: TName, { config, system, ...options }: TCreateConfig) {
     type TSystem = MergeObjectPrettify<
-      NoArgCore.DefaultSystem,
+      NoArgCoreHelper.DefaultSystem,
       Required<NonNullable<TCreateConfig['system']>>
     >
 
     type TConfig = MergeObjectPrettify<
-      NoArgCore.DefaultConfig,
+      NoArgCoreHelper.DefaultConfig,
       Required<NonNullable<TCreateConfig['config']>>
     >
 
     type TOptions = Prettify<
       Required<
         MergeObject<
-          NoArgCore.DefaultOptions,
+          NoArgCoreHelper.DefaultOptions,
           Omit<TCreateConfig, 'config' | 'system'>
         >
       >
@@ -133,15 +145,15 @@ export class NoArgRoot<
       adminSymbol,
       name,
       {
-        ...NoArgCore.defaultSystem,
+        ...NoArgCoreHelper.defaultSystem,
         ...system,
       } as TSystem,
       {
-        ...NoArgCore.defaultConfig,
+        ...NoArgCoreHelper.defaultConfig,
         ...config,
       } as TConfig,
       {
-        ...NoArgCore.defaultOptions,
+        ...NoArgCoreHelper.defaultOptions,
         ...options,
       } as unknown as TOptions
     )
@@ -166,7 +178,7 @@ export class NoArgRoot<
   ) {
     if (symbol !== adminSymbol) {
       throw new Error(
-        'NoArg is not meant to be instantiated directly. Use NoArgProgram.create() instead. But if really need this contact the developer. This is disabled just for safety.'
+        'NoArg is not meant to be instantiated directly. Use NoArgProgramHelper.create() instead. But if really need this contact the developer. This is disabled just for safety.'
       )
     }
 
@@ -189,9 +201,76 @@ export class NoArgRoot<
 
 export module NoArgRoot {
   export type CreateConfig = Prettify<
-    Partial<NoArgCore.Options> & {
-      config?: Partial<NoArgCore.Config>
-      system?: Partial<NoArgCore.System>
+    Partial<NoArgCoreHelper.Options> & {
+      config?: Partial<NoArgCoreHelper.Config>
+      system?: Partial<NoArgCoreHelper.System>
     }
   >
+
+  export type InferFlags<T> = T extends NoArgRoot<
+    string,
+    any,
+    any,
+    infer TOptions
+  >
+    ? NoArgProgramHelper.ExtractFlags<TOptions['flags']>
+    : never
+
+  export type InferGlobalFlags<T> = T extends NoArgRoot<
+    string,
+    any,
+    any,
+    infer TOptions
+  >
+    ? NoArgProgramHelper.ExtractFlags<TOptions['globalFlags']>
+    : never
+
+  export type InferCombinedFlags<T> = T extends NoArgRoot<
+    string,
+    any,
+    any,
+    infer TOptions
+  >
+    ? NoArgProgramHelper.ExtractCombinedFlags<TOptions>
+    : never
+
+  export type InferArguments<T> = T extends NoArgRoot<
+    string,
+    any,
+    any,
+    infer TOptions
+  >
+    ? NoArgProgramHelper.ExtractArguments<TOptions['arguments']>
+    : never
+
+  export type InferOptionalArguments<T> = T extends NoArgRoot<
+    string,
+    any,
+    any,
+    infer TOptions
+  >
+    ? NoArgProgramHelper.ExtractOptionalArguments<TOptions['optionalArguments']>
+    : never
+
+  export type InferListArguments<T> = T extends NoArgRoot<
+    string,
+    any,
+    any,
+    infer TOptions
+  >
+    ? undefined extends TOptions['listArgument']
+      ? never
+      : NoArgProgramHelper.ExtractListArgument<
+          NonNullable<TOptions['listArgument']>
+        >
+    : never
+
+  export type InferCombinedArgs<T> = T extends NoArgRoot<
+    string,
+    any,
+    any,
+    infer TOptions
+  >
+    ? NoArgProgramHelper.ExtractCombinedArgs<TOptions>
+    : never
 }

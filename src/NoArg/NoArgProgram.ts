@@ -6,20 +6,25 @@ import {
 } from './types.t'
 import colors from '../lib/colors'
 import { CellValue } from 'cli-table3'
-import { NoArgCore } from './NoArgCore'
+import { NoArgCoreHelper } from './NoArgCore'
 import { NoArgError } from './NoArgError'
 import { NoArgParser } from './NoArgParser'
 import { TypeArray } from '../schema/TypeArray'
 import { TypeTuple } from '../schema/TypeTuple'
 import { ExtractTypeOutput } from '../schema/type.t'
 import { CustomTable } from '../helpers/custom-table'
-import { Prettify, MergeObject, MakeObjectOptional } from '../types/util.t'
+import {
+  Prettify,
+  MergeObject,
+  MakeObjectOptional,
+  WritableObject,
+} from '../types/util.t'
 
 export class NoArgProgram<
   TName extends string,
-  TSystem extends NoArgCore.System,
-  TConfig extends NoArgProgram.Config,
-  TOptions extends NoArgCore.Options
+  TSystem extends NoArgCoreHelper.System,
+  TConfig extends NoArgProgramHelper.Config,
+  TOptions extends NoArgCoreHelper.Options
 > extends NoArgParser<TName, TSystem, TConfig, TOptions> {
   protected parent?: NoArgProgram<any, any, any, any>
 
@@ -35,10 +40,10 @@ export class NoArgProgram<
   }
 
   /**
-   * Create a new NoArgProgram instance
+   * Create a new NoArgProgramHelper instance
    * @param name The name of the program
    * @param options The options for the program
-   * @returns A new NoArgProgram instance
+   * @returns A new NoArgProgramHelper instance
    * @example
    * const program = app.create('my-program', {
    *   ...
@@ -47,17 +52,17 @@ export class NoArgProgram<
    */
   public create<
     const TName extends string,
-    const TCreateOptionsWithConfig extends Partial<NoArgCore.Options> & {
-      config?: Partial<NoArgProgram.Config>
+    const TCreateOptionsWithConfig extends Partial<NoArgCoreHelper.Options> & {
+      config?: Partial<NoArgProgramHelper.Config>
     }
   >(name: TName, { config, ...options }: TCreateOptionsWithConfig) {
     type TInnerConfig = NonNullable<TCreateOptionsWithConfig['config']>
     type TInnerOptions = Omit<
       TCreateOptionsWithConfig,
       'config'
-    > extends Partial<NoArgCore.Options>
+    > extends Partial<NoArgCoreHelper.Options>
       ? MergeObject<
-          NoArgCore.DefaultOptions,
+          NoArgCoreHelper.DefaultOptions,
           Omit<TCreateOptionsWithConfig, 'config'>
         >
       : never
@@ -85,23 +90,26 @@ export class NoArgProgram<
       ...config,
     } as unknown as TChildConfig
 
-    const optionsWithDefault = {
-      ...NoArgCore.defaultOptions,
-      ...options,
+    const newOptions: TChildOptions = {
+      ...NoArgCoreHelper.defaultOptions,
+      ...{
+        ...options,
+        globalFlags: newConfig.skipGlobalFlags
+          ? options.globalFlags ?? NoArgCoreHelper.defaultOptions.globalFlags
+          : {
+              ...this.options.globalFlags,
+              ...options.globalFlags,
+            },
+      },
     } as unknown as TChildOptions
 
-    if (!newConfig.skipGlobalFlags) {
-      optionsWithDefault.globalFlags = {
-        ...this.options.globalFlags,
-        ...(optionsWithDefault.globalFlags as any),
-      }
-    }
+    console.log({ newOptions })
 
     const child = new NoArgProgram<TName, TSystem, TChildConfig, TChildOptions>(
       name,
       this.system,
       newConfig,
-      optionsWithDefault,
+      newOptions as TChildOptions,
       this
     )
 
@@ -109,7 +117,7 @@ export class NoArgProgram<
     return child
   }
 
-  protected onActionCallback?: NoArgProgram.ExtractAction<
+  protected onActionCallback?: NoArgProgramHelper.ExtractAction<
     TSystem,
     TConfig,
     TOptions
@@ -137,11 +145,11 @@ export class NoArgProgram<
           ...result.args,
           ...result.optArgs,
           ...(this.options.listArgument ? [result.listArgs] : []),
-          ...(this.config.enableTrailingArgs ? [result.trailingArgs] : []),
+          ...(this.options.enableTrailingArgs ? [result.trailingArgs] : []),
         ],
-        result.flags,
-        this.config,
-        this.system,
+        { ...result.flags },
+        { ...this.config },
+        { ...this.system },
       ] as Parameters<NonNullable<typeof this.onActionCallback>>
 
       this.onActionCallback?.(...output)
@@ -198,7 +206,7 @@ export class NoArgProgram<
       commandItems.push(this.colors.flags('--[flags]'))
     }
 
-    if (this.config.enableTrailingArgs) {
+    if (this.options.enableTrailingArgs) {
       commandItems.push(
         this.colors.description(this.config.trailingArgsSeparator),
         this.colors.description('[...trailing-args]')
@@ -387,7 +395,7 @@ export class NoArgProgram<
       console.log('')
     }
 
-    if (this.config.enableTrailingArgs) {
+    if (this.options.enableTrailingArgs) {
       console.log(colors.bold('Trailing Arguments:'))
 
       console.log(
@@ -563,7 +571,7 @@ export class NoArgProgram<
   }
 
   private renderUsageProgramConfiguration() {
-    if (this.config.enableTrailingArgs) {
+    if (this.options.enableTrailingArgs) {
       this.renderUsageUtils.printGroupHeader('Trailing Arguments is enabled')
       this.renderUsageUtils.printValid(colors.yellow('--option'), 'value')
       this.renderUsageUtils.printValid(
@@ -742,8 +750,8 @@ export class NoArgProgram<
   }
 }
 
-export module NoArgProgram {
-  export type Config = NoArgCore.Config & {
+export module NoArgProgramHelper {
+  export type Config = NoArgCoreHelper.Config & {
     skipGlobalFlags?: boolean
   }
 
@@ -751,41 +759,38 @@ export module NoArgProgram {
     [K in keyof T]: ExtractTypeOutput<T[K]['type']>
   }
 
-  export type ExtractOptionalArguments<T extends OptionalArgumentsOptions[]> =
-    Partial<ExtractArguments<T>>
+  export type ExtractOptionalArguments<T extends OptionalArgumentsOptions[]> = {
+    [K in keyof ExtractArguments<T>]: ExtractArguments<T>[K] | undefined
+  }
 
   export type ExtractListArgument<T extends ListArgumentsOption> =
     ExtractTypeOutput<T['type']>[]
 
-  export type ExtractFlags<T extends FlagOption> = {
+  export type ExtractFlags<T extends FlagOption> = WritableObject<{
     [K in keyof T]:
       | ExtractTypeOutput<T[K]>
       | (T[K]['config']['required'] extends true ? never : undefined)
-  }
+  }>
 
-  export type ExtractAction<
-    TSystem extends NoArgCore.System,
-    TConfig extends NoArgProgram.Config,
-    TOptions extends NoArgCore.Options
-  > = (
-    args: [
-      ...ExtractArguments<NonNullable<TOptions['arguments']>>,
-      ...ExtractOptionalArguments<NonNullable<TOptions['optionalArguments']>>,
-      ...(TOptions['listArgument'] extends {}
-        ? [
-            ListArguments: Prettify<
-              ExtractListArgument<NonNullable<TOptions['listArgument']>>
-            >
-          ]
-        : []),
-      ...(TConfig['enableTrailingArgs'] extends NonNullable<
-        NoArgCore.Config['enableTrailingArgs']
-      >
-        ? [TrailingArguments: string[]]
-        : [])
-    ],
+  export type ExtractCombinedArgs<TOptions extends NoArgCoreHelper.Options> = [
+    ...ExtractArguments<NonNullable<TOptions['arguments']>>,
+    ...ExtractOptionalArguments<NonNullable<TOptions['optionalArguments']>>,
+    ...(TOptions['listArgument'] extends {}
+      ? [
+          ListArguments: Prettify<
+            ExtractListArgument<NonNullable<TOptions['listArgument']>>
+          >
+        ]
+      : []),
+    ...(TOptions['enableTrailingArgs'] extends NonNullable<
+      NoArgCoreHelper.Options['enableTrailingArgs']
+    >
+      ? [TrailingArguments: string[]]
+      : [])
+  ]
 
-    flags: Prettify<
+  export type ExtractCombinedFlags<TOptions extends NoArgCoreHelper.Options> =
+    Prettify<
       MakeObjectOptional<
         ExtractFlags<
           MergeObject<
@@ -794,8 +799,15 @@ export module NoArgProgram {
           >
         >
       >
-    >,
+    >
 
+  export type ExtractAction<
+    TSystem extends NoArgCoreHelper.System,
+    TConfig extends NoArgProgramHelper.Config,
+    TOptions extends NoArgCoreHelper.Options
+  > = (
+    args: ExtractCombinedArgs<TOptions>,
+    flags: ExtractCombinedFlags<TOptions>,
     config: TConfig,
     system: TSystem
   ) => void

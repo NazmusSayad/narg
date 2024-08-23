@@ -7,7 +7,7 @@ export class TypeNumber<
 > extends TypeCore<TConfig> {
   name = 'number' as const
 
-  checkType(value: string | number) {
+  protected checkType(value: string | number) {
     if (value === '') return new ResultErr(`Number can not be empty string`)
 
     const number = typeof value === 'string' ? Number(value) : value

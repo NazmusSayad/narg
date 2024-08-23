@@ -77,9 +77,8 @@ const app = NoArg.create('app', {
     minLength: 1,
     maxLength: 3,
   },
-  config: {
-    enableTrailingArgs: true,
-  },
+  enableTrailingArgs: true,
+  config: {},
   system: {},
 }).on(([arg1, arg2, arg3, optArg4, optArg5, listArg, trailingArgs], flags) => {
   console.log({ arg1, arg2, arg3, optArg4, optArg5, listArg, trailingArgs })

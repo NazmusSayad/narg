@@ -29,8 +29,9 @@ const devAndBuild = NoArg.defineConfig({
       .description('Enable __dirname and __filename in ES modules'),
   },
 
+  enableTrailingArgs: true,
+
   config: {
-    enableTrailingArgs: true,
     trailingArgsSeparator: '--tsc',
   },
 })

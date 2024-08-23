@@ -6,7 +6,7 @@ export class TypeBoolean<
 > extends TypeCore<TConfig> {
   name = 'boolean' as const
 
-  checkType(value: string) {
+  protected checkType(value: string) {
     value = value.trim().toLowerCase()
 
     if (value === 'true' || value === 'yes') return new ResultOk(true)

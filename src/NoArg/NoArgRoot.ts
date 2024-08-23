@@ -1,3 +1,4 @@
+import colors from '../lib/colors'
 import { NoArgCore } from './NoArgCore'
 import adminSymbol from './admin-symbol'
 import { NoArgProgram } from './NoArgProgram'
@@ -15,20 +16,13 @@ export class NoArgRoot<
   TConfig extends NoArgProgram.Config,
   TOptions extends NoArgCore.Options
 > extends NoArgProgram<TName, TSystem, TConfig, TOptions> {
-  constructor(
-    symbol: symbol,
-    name: TName,
-    system: TSystem,
-    config: TConfig,
-    options: TOptions
-  ) {
-    if (symbol !== adminSymbol) {
-      throw new Error(
-        'NoArg is not meant to be instantiated directly. Use NoArgProgram.create() instead. But if really need this contact the developer. This is disabled just for safety.'
-      )
-    }
-
-    super(name, system, config, options as any)
+  static colors = {
+    disable() {
+      colors.enabled = false
+    },
+    enable() {
+      colors.enabled = true
+    },
   }
 
   static string<const T extends string[]>(...strings: T) {
@@ -159,8 +153,24 @@ export class NoArgRoot<
    * - This is a helper function to make the type inference better
    * @param config The configuration for the program
    */
-  static createConfig<const T extends NoArgRoot.CreateConfig>(config: T) {
+  static defineConfig<const T extends NoArgRoot.CreateConfig>(config: T) {
     return config as Prettify<T>
+  }
+
+  constructor(
+    symbol: symbol,
+    name: TName,
+    system: TSystem,
+    config: TConfig,
+    options: TOptions
+  ) {
+    if (symbol !== adminSymbol) {
+      throw new Error(
+        'NoArg is not meant to be instantiated directly. Use NoArgProgram.create() instead. But if really need this contact the developer. This is disabled just for safety.'
+      )
+    }
+
+    super(name, system, config, options as any)
   }
 
   /**

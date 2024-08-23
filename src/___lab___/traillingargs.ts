@@ -1,5 +1,6 @@
 import NoArg from '..'
-const devAndBuild = NoArg.createConfig({
+
+const devAndBuild = NoArg.defineConfig({
   optionalArguments: [
     {
       name: 'root',
@@ -70,4 +71,4 @@ child.on((args, flags, config) => {
   console.log(flags)
 })
 
-app.start(['child', '--tsc', '--help', 'boom'])
+app.start(['child', '--help', '--help', 'boom'])

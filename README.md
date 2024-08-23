@@ -4,6 +4,18 @@
 
 `noarg` is a lightweight Node.js package designed to simplify command-line argument parsing for CLI applications. With `noarg`, you can effortlessly define and parse command-line arguments and options, making it easier to build robust and user-friendly command-line interfaces.
 
+## Features
+
+- Fully type safe.
+- Suitable for both _commonjs_ and _esm_.
+- Supports **nested** commands with individual configurations.
+- Handles `required`, `optional`, and list arguments with ease.
+- Provides robust **error handling** with descriptive messages.
+- Works seamlessly with child programs, enabling modular CLI design.
+- Configurable **default** values and **prompts** for missing arguments.
+- Automatically generates `help` and `usage` documentation.
+- Supports disabling and enabling CLI colors.
+
 ### Installation
 
 To install `noarg` package, you can use npm:
@@ -92,6 +104,8 @@ node app.js arg-1 arg-2 arg-3 optional-arg-1 listArg-1 listArg-2 --config config
 ### Use common config
 
 ```ts
+import NoArg from 'noarg'
+
 const app = NoArg.create('app', {})
 
 const listArguments = {
@@ -99,7 +113,7 @@ const listArguments = {
   type: NoArg.boolean(),
 } as const
 
-const config = NoArg.createConfig({
+const config = NoArg.defineConfig({
   arguments: [{ name: 'arg1', type: NoArg.string() }],
   optionalArguments: [{ name: 'optArg1', type: NoArg.string() }],
   listArguments,
@@ -107,6 +121,17 @@ const config = NoArg.createConfig({
 
 app.create('dev', config)
 app.create('build', config)
+```
+
+### Disable cli colors
+
+```ts
+import NoArg from 'noarg'
+
+NoArg.colors.enable()
+NoArg.colors.disable()
+
+// By default it's enabled
 ```
 
 ### Tips

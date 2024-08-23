@@ -399,6 +399,15 @@ export class NoArgProgram<
       console.log('')
     }
 
+    if (this.options.notes?.length) {
+      console.log(colors.bold('Notes:'))
+      this.options.notes.forEach((note) => {
+        console.log(' -', colors.dim(note))
+      })
+
+      console.log('')
+    }
+
     if (this.config.help) {
       console.log(colors.bold('Tips:'))
       console.log(
@@ -423,11 +432,11 @@ export class NoArgProgram<
     },
 
     printGroupHeader(...args: string[]) {
-      console.log(' ⚙︎', colors.black(args.join(' ')))
+      console.log(' ⚙︎', colors.dim(args.join(' ')))
     },
 
     printPointHeader(...args: string[]) {
-      console.log('   -', colors.black(args.join(' ')))
+      console.log('   -', colors.dim(args.join(' ')))
     },
 
     tableGroup(name: string, result: string, ...args: string[]) {
@@ -528,7 +537,7 @@ export class NoArgProgram<
         '--boolean=true',
         '--boolean yes',
         '--boolean=yes',
-        colors.black("* Casing doesn't matter"),
+        colors.dim("* Casing doesn't matter"),
         '--boolean YeS'
       ),
 
@@ -540,7 +549,7 @@ export class NoArgProgram<
         '--boolean=false',
         '--boolean no',
         '--boolean=no',
-        colors.black("* Casing doesn't matter"),
+        colors.dim("* Casing doesn't matter"),
         '--boolean fAlSe'
       ),
 
@@ -624,7 +633,7 @@ export class NoArgProgram<
       )
       this.renderUsageUtils.printValid(
         colors.yellow('--option'),
-        colors.black('value1'),
+        colors.dim('value1'),
         colors.yellow('--option'),
         'value2'
       )
@@ -665,13 +674,13 @@ export class NoArgProgram<
 
         this.renderUsageUtils.printValid(
           colors.yellow('--option'),
-          colors.black('value1'),
+          colors.dim('value1'),
           colors.yellow('--option'),
           'value2 value3'
         )
         this.renderUsageUtils.printValid(
           colors.yellow('--option'),
-          colors.black('value1 value2'),
+          colors.dim('value1 value2'),
           colors.yellow('--option'),
           'value3'
         )

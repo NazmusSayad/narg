@@ -6,7 +6,6 @@ import {
   OptionalArgumentsOptions,
 } from './types.t'
 import validateFlagName from '../helpers/validate-flag-name'
-import { MergeObject, Prettify } from '../types/util.t'
 
 export class NoArgCore<
   TName extends string,
@@ -73,6 +72,8 @@ export module NoArgCore {
 
   export type Options = {
     description?: string
+    notes?: string[]
+
     listArgument?: ListArgumentsOption
     arguments: ArgumentsOptions[]
     optionalArguments: OptionalArgumentsOptions[]

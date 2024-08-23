@@ -60,6 +60,7 @@ const child = app.create('child', {
     description: 'List of items',
     type: NoArg.string(),
   },
+  notes: ['This is a note'],
 
   ...devAndBuild,
 })
@@ -69,4 +70,4 @@ child.on((args, flags, config) => {
   console.log(flags)
 })
 
-app.start(['child', '--tsc', 'boom'])
+app.start(['child', '--tsc', '--help', 'boom'])

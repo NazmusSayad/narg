@@ -403,6 +403,22 @@ export class NoArgParser<
   private async parseCore(args: string[]) {
     const [argsList, optionsRecord, trailingArgs] = this.divideArguments(args)
 
+    if (this.config.help) {
+      const self = this as unknown as NoArgProgram<any, any, any, any>
+
+      optionsRecord.forEach(({ arg }) => {
+        if (arg === '--help' || arg === '-h') {
+          self.renderHelp()
+          return process.exit(0)
+        }
+
+        if (arg === '--help-usage' || arg === '-hu') {
+          self.renderUsage()
+          return process.exit(0)
+        }
+      })
+    }
+
     const { resultArgs, resultOptArgs, resultListArg } =
       await this.parseArguments(argsList)
 
@@ -421,23 +437,6 @@ export class NoArgParser<
     args: string[]
   ): ReturnType<typeof this.parseCore> | void {
     if (this.browsePrograms(args)) return
-
-    if (this.config.help) {
-      const self = this as unknown as NoArgProgram<any, any, any, any>
-
-      args.forEach((arg) => {
-        if (arg === '--help' || arg === '-h') {
-          self.renderHelp()
-          return process.exit(0)
-        }
-
-        if (arg === '--help-usage' || arg === '-hu') {
-          self.renderUsage()
-          return process.exit(0)
-        }
-      })
-    }
-
     return this.parseCore(args)
   }
 }

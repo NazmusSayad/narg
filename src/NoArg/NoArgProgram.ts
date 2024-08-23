@@ -153,7 +153,7 @@ export class NoArgProgram<
     }
   }
 
-  private helpColors = {
+  private colors = {
     type: colors.yellow,
     description: colors.reset,
     programs: colors.red,
@@ -174,20 +174,20 @@ export class NoArgProgram<
     })(this)
 
     if (this.programs.size) {
-      commandItems.push(this.helpColors.programs(`(program)`))
+      commandItems.push(this.colors.programs(`(program)`))
     }
 
     this.options.arguments.forEach((argument) => {
-      commandItems.push(this.helpColors.arguments(`<${argument.name}>`))
+      commandItems.push(this.colors.arguments(`<${argument.name}>`))
     })
 
     this.options.optionalArguments.forEach((argument) => {
-      commandItems.push(this.helpColors.arguments(`<${argument.name}>`) + '?')
+      commandItems.push(this.colors.arguments(`<${argument.name}>`) + '?')
     })
 
     if (this.options.listArgument) {
       commandItems.push(
-        this.helpColors.arguments('[...' + this.options.listArgument.name + ']')
+        this.colors.arguments('[...' + this.options.listArgument.name + ']')
       )
     }
 
@@ -195,20 +195,20 @@ export class NoArgProgram<
       Object.keys(this.options.flags).length ||
       Object.keys(this.options.globalFlags).length
     ) {
-      commandItems.push(this.helpColors.flags('--[flags]'))
+      commandItems.push(this.colors.flags('--[flags]'))
     }
 
     if (this.config.enableTrailingArgs) {
       commandItems.push(
-        this.helpColors.description(this.config.trailingArgsSeparator),
-        this.helpColors.description('[...trailing-args]')
+        this.colors.description(this.config.trailingArgsSeparator),
+        this.colors.description('[...trailing-args]')
       )
     }
 
     console.log(
       colors.cyan.bold(this.name),
       this.options.description
-        ? this.helpColors.description(this.options.description)
+        ? this.colors.description(this.options.description)
         : ''
     )
 
@@ -223,9 +223,9 @@ export class NoArgProgram<
 
     const programData = Array.from(this.programs).map<[CellValue, CellValue]>(
       ([name, program]) => [
-        this.helpColors.programs(name),
-        this.helpColors.description(
-          program.options.description ?? this.helpColors.emptyString
+        this.colors.programs(name),
+        this.colors.description(
+          program.options.description ?? this.colors.emptyString
         ),
       ]
     )
@@ -240,10 +240,10 @@ export class NoArgProgram<
     this.options.arguments.forEach((argument) => {
       const { name, type } = argument
       tables.push([
-        this.helpColors.arguments(name),
-        this.helpColors.type(type.name),
-        this.helpColors.description(
-          argument.description ?? this.helpColors.emptyString
+        this.colors.arguments(name),
+        this.colors.type(type.name),
+        this.colors.description(
+          argument.description ?? this.colors.emptyString
         ),
       ])
     })
@@ -251,10 +251,10 @@ export class NoArgProgram<
     this.options.optionalArguments.forEach((argument) => {
       const { name, type } = argument
       tables.push([
-        this.helpColors.arguments(name),
-        this.helpColors.type(type.name) + '?',
-        this.helpColors.description(
-          argument.description ?? this.helpColors.emptyString
+        this.colors.arguments(name),
+        this.colors.type(type.name) + '?',
+        this.colors.description(
+          argument.description ?? this.colors.emptyString
         ),
       ])
     })
@@ -282,9 +282,9 @@ export class NoArgProgram<
       }
 
       tables.push([
-        this.helpColors.arguments(name),
-        this.helpColors.type(type.name) + '[]' + nameSuffix,
-        this.helpColors.description(description ?? this.helpColors.emptyString),
+        this.colors.arguments(name),
+        this.colors.type(type.name) + '[]' + nameSuffix,
+        this.colors.description(description ?? this.colors.emptyString),
       ])
     }
 
@@ -311,28 +311,28 @@ export class NoArgProgram<
       .map<[CellValue, CellValue, CellValue]>(([name, schema]) => {
         const aliasString = schema.config.aliases
           ? `-${schema.config.aliases
-              .map((alias) => this.helpColors.flags(alias))
+              .map((alias) => this.colors.flags(alias))
               .join('\n -')}`
           : ''
 
         const optionName =
           '--' +
-          this.helpColors.flags(name) +
+          this.colors.flags(name) +
           (aliasString ? '\n ' + aliasString : '')
 
         const optionType =
           (schema instanceof TypeArray
-            ? this.helpColors.type(schema.name) +
+            ? this.colors.type(schema.name) +
               '[' +
-              this.helpColors.type(schema.config.schema.name) +
+              this.colors.type(schema.config.schema.name) +
               ']'
             : schema instanceof TypeTuple
             ? '[' +
               schema.config.schema
-                .map((schema) => this.helpColors.type(schema.name))
+                .map((schema) => this.colors.type(schema.name))
                 .join(', ') +
               ']'
-            : this.helpColors.type(schema.name)) +
+            : this.colors.type(schema.name)) +
           (schema.config.required
             ? schema.config.default !== undefined ||
               schema.config.askQuestion !== undefined
@@ -343,8 +343,8 @@ export class NoArgProgram<
         return [
           optionName,
           optionType,
-          this.helpColors.description(
-            schema.config.description ?? this.helpColors.emptyString
+          this.colors.description(
+            schema.config.description ?? this.colors.emptyString
           ),
         ]
       })
@@ -399,7 +399,7 @@ export class NoArgProgram<
       console.log('')
     }
 
-    if (!this.config.help) {
+    if (this.config.help) {
       console.log(colors.bold('Tips:'))
       console.log(
         ' Use',
@@ -438,12 +438,12 @@ export class NoArgProgram<
   private renderUsageStructure() {
     console.log(
       colors.green('$'),
-      this.helpColors.programs('programs'),
-      this.helpColors.arguments('fixed-arguments'),
-      this.helpColors.arguments('optional-arguments'),
-      this.helpColors.arguments('list-arguments'),
-      this.helpColors.flags('flags'),
-      this.helpColors.trailingArgs('trailing-args')
+      this.colors.programs('programs'),
+      this.colors.arguments('fixed-arguments'),
+      this.colors.arguments('optional-arguments'),
+      this.colors.arguments('list-arguments'),
+      this.colors.flags('flags'),
+      this.colors.trailingArgs('trailing-args')
     )
 
     console.log(
@@ -452,7 +452,7 @@ export class NoArgProgram<
     )
 
     console.log('')
-    this.renderUsageUtils.printPointHeader(this.helpColors.programs('programs'))
+    this.renderUsageUtils.printPointHeader(this.colors.programs('programs'))
     console.log(
       '',
       "This is the command that you want to run. It's the first argument of the command line."
@@ -460,7 +460,7 @@ export class NoArgProgram<
 
     console.log('')
     this.renderUsageUtils.printPointHeader(
-      this.helpColors.arguments('fixed-arguments')
+      this.colors.arguments('fixed-arguments')
     )
     console.log(
       '',
@@ -469,7 +469,7 @@ export class NoArgProgram<
 
     console.log('')
     this.renderUsageUtils.printPointHeader(
-      this.helpColors.arguments('optional-arguments')
+      this.colors.arguments('optional-arguments')
     )
     console.log(
       '',
@@ -478,7 +478,7 @@ export class NoArgProgram<
 
     console.log('')
     this.renderUsageUtils.printPointHeader(
-      this.helpColors.arguments('list-arguments')
+      this.colors.arguments('list-arguments')
     )
     console.log(
       '',
@@ -486,7 +486,7 @@ export class NoArgProgram<
     )
 
     console.log('')
-    this.renderUsageUtils.printPointHeader(this.helpColors.flags('flags'))
+    this.renderUsageUtils.printPointHeader(this.colors.flags('flags'))
     console.log(
       '',
       'These are the options that you want to pass to the command. They are optional and can be changed.'
@@ -494,7 +494,7 @@ export class NoArgProgram<
 
     console.log('')
     this.renderUsageUtils.printPointHeader(
-      this.helpColors.trailingArgs('trailing-args')
+      this.colors.trailingArgs('trailing-args')
     )
     console.log(
       '',

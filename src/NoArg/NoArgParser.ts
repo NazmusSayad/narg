@@ -436,7 +436,7 @@ export class NoArgParser<
   ): ReturnType<typeof this.parseCore> | void {
     if (this.browsePrograms(args)) return
 
-    if (!this.config.help) {
+    if (this.config.help) {
       const self = this as unknown as NoArgProgram<any, any, any, any>
 
       args.forEach((arg) => {

@@ -1,7 +1,7 @@
 import NoArg from '..'
 import * as fs from 'fs'
 
-const config = NoArg.createConfig({
+const config = NoArg.defineConfig({
   flags: { list: NoArg.array(NoArg.string()) },
 })
 

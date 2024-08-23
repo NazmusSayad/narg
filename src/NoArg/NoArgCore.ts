@@ -34,10 +34,12 @@ export class NoArgCore<
       )
     }
 
-    this.validateNonEmptyString(
-      config.trailingArgsSeparator,
-      'config.trailingArgsSeparator'
-    )
+    if (options.trailingArguments) {
+      this.validateNonEmptyString(
+        options.trailingArguments,
+        'options.trailingArguments'
+      )
+    }
 
     if (options.flags) {
       Object.keys(options.flags).forEach((name) => {
@@ -60,7 +62,6 @@ export class NoArgCore<
 export module NoArgCoreHelper {
   export type Config = {
     readonly help: boolean
-    readonly trailingArgsSeparator: string
   }
 
   export type Options = {
@@ -71,7 +72,7 @@ export module NoArgCoreHelper {
     readonly optionalArguments: OptionalArgumentsOptions[]
 
     readonly listArgument?: ListArgumentsOption
-    readonly enableTrailingArgs?: boolean
+    readonly trailingArguments?: string
 
     readonly flags: FlagOption
     readonly globalFlags: FlagOption
@@ -79,7 +80,6 @@ export module NoArgCoreHelper {
 
   export const defaultConfig = {
     help: true,
-    trailingArgsSeparator: '--',
   } as const
 
   export const defaultOptions = {

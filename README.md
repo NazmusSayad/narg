@@ -77,7 +77,7 @@ const app = NoArg.create('app', {
     minLength: 1,
     maxLength: 3,
   },
-  enableTrailingArgs: true,
+  trailingArguments: '--',
   config: {},
   system: {},
 }).on(([arg1, arg2, arg3, optArg4, optArg5, listArg, trailingArgs], flags) => {
@@ -115,6 +115,7 @@ const listArguments = {
 const config = NoArg.defineConfig({
   arguments: [{ name: 'arg1', type: NoArg.string() }],
   optionalArguments: [{ name: 'optArg1', type: NoArg.string() }],
+  flags: { hobbies: NoArg.array(NoArg.string()) },
   listArguments,
 })
 

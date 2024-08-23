@@ -29,10 +29,10 @@ const devAndBuild = NoArg.defineConfig({
       .description('Enable __dirname and __filename in ES modules'),
   },
 
-  enableTrailingArgs: true,
+  trailingArguments: '',
 
   config: {
-    trailingArgsSeparator: '--tsc',
+    help: false,
   },
 })
 
@@ -68,8 +68,10 @@ const child = app.create('child', {
 })
 
 child.on((args, flags, config) => {
+  child.renderUsage()
+
   console.log(args)
   console.log(flags)
 })
 
-app.start(['child', '--help', '--help', 'boom'])
+app.start(['child', 'boom'])

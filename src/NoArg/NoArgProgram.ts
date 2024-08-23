@@ -103,8 +103,6 @@ export class NoArgProgram<
       },
     } as unknown as TChildOptions
 
-    console.log({ newOptions })
-
     const child = new NoArgProgram<TName, TSystem, TChildConfig, TChildOptions>(
       name,
       this.system,
@@ -145,7 +143,7 @@ export class NoArgProgram<
           ...result.args,
           ...result.optArgs,
           ...(this.options.listArgument ? [result.listArgs] : []),
-          ...(this.options.enableTrailingArgs ? [result.trailingArgs] : []),
+          ...(this.options.trailingArguments ? [result.trailingArgs] : []),
         ],
         { ...result.flags },
         { ...this.config },
@@ -206,9 +204,9 @@ export class NoArgProgram<
       commandItems.push(this.colors.flags('--[flags]'))
     }
 
-    if (this.options.enableTrailingArgs) {
+    if (this.options.trailingArguments) {
       commandItems.push(
-        this.colors.description(this.config.trailingArgsSeparator),
+        this.colors.description(this.options.trailingArguments),
         this.colors.description('[...trailing-args]')
       )
     }
@@ -395,7 +393,7 @@ export class NoArgProgram<
       console.log('')
     }
 
-    if (this.options.enableTrailingArgs) {
+    if (this.options.trailingArguments) {
       console.log(colors.bold('Trailing Arguments:'))
 
       console.log(
@@ -515,8 +513,7 @@ export class NoArgProgram<
     )
     console.log(
       '',
-      'These are the arguments that are passed to the command after the trailing-args separator. They are passed as is and are ignored by the program.',
-      colors.yellow(this.config.trailingArgsSeparator)
+      'These are the arguments that are passed to the command after the trailing-args separator. They are passed as is and are ignored by the program.'
     )
   }
 
@@ -571,24 +568,18 @@ export class NoArgProgram<
   }
 
   private renderUsageProgramConfiguration() {
-    if (this.options.enableTrailingArgs) {
-      this.renderUsageUtils.printGroupHeader('Trailing Arguments is enabled')
-      this.renderUsageUtils.printValid(colors.yellow('--option'), 'value')
-      this.renderUsageUtils.printValid(
-        colors.yellow('--option'),
-        'value',
-        colors.yellow(this.config.trailingArgsSeparator),
-        'trailing-args'
-      )
+    if (this.config.help) {
+      this.renderUsageUtils.printGroupHeader('Auto Help flag is enabled')
+      this.renderUsageUtils.printValid(colors.yellow('--help'))
+      this.renderUsageUtils.printValid(colors.yellow('--help-usage'))
+      this.renderUsageUtils.printValid(colors.yellow('-h'))
+      this.renderUsageUtils.printValid(colors.yellow('-hu'))
     } else {
-      this.renderUsageUtils.printGroupHeader('Trailing Arguments is disabled')
-      this.renderUsageUtils.printValid(colors.yellow('--option'), 'value')
-      this.renderUsageUtils.printInvalid(
-        colors.yellow('--option'),
-        'value',
-        colors.red(this.config.trailingArgsSeparator),
-        colors.red('trailing-args')
-      )
+      this.renderUsageUtils.printGroupHeader('Auto Help flag is disabled')
+      this.renderUsageUtils.printInvalid(colors.yellow('--help'))
+      this.renderUsageUtils.printInvalid(colors.yellow('--help-usage'))
+      this.renderUsageUtils.printInvalid(colors.yellow('-h'))
+      this.renderUsageUtils.printInvalid(colors.yellow('-hu'))
     }
   }
 
@@ -782,10 +773,12 @@ export module NoArgProgramHelper {
           >
         ]
       : []),
-    ...(TOptions['enableTrailingArgs'] extends NonNullable<
-      NoArgCoreHelper.Options['enableTrailingArgs']
+    ...(TOptions['trailingArguments'] extends NonNullable<
+      NoArgCoreHelper.Options['trailingArguments']
     >
-      ? [TrailingArguments: string[]]
+      ? TOptions['trailingArguments'] extends ''
+        ? []
+        : [TrailingArguments: string[]]
       : [])
   ]
 

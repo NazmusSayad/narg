@@ -1,2 +1,2 @@
 console.clear()
-require('./type')
+require('./traillingargs')

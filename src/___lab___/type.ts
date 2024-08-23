@@ -27,7 +27,7 @@ const app = NoArg.create('app', {
     age: NoArg.number(1, 18),
   },
 
-  enableTrailingArgs: true,
+  trailingArguments: 'true',
 
   globalFlags: {
     silent: NoArg.string('TEST'),
@@ -48,7 +48,6 @@ app.create('sub', {
   },
 
   config: {
-    trailingArgsSeparator: '--',
     skipGlobalFlags: true,
   },
 })

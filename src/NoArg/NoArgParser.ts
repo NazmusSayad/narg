@@ -27,10 +27,10 @@ export class NoArgParser<
     const mainArgs = []
     const trailingArgs = []
 
-    if (this.options.enableTrailingArgs) {
+    if (this.options.trailingArguments) {
       const [main, trailing] = splitTrailingArgs(
         args,
-        this.config.trailingArgsSeparator
+        this.options.trailingArguments
       )
 
       mainArgs.push(...main)

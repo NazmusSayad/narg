@@ -757,11 +757,15 @@ export module NoArgProgramHelper {
   export type ExtractListArgument<T extends ListArgumentsOption> =
     ExtractTypeOutput<T['type']>[]
 
-  export type ExtractFlags<T extends FlagOption> = WritableObject<{
-    [K in keyof T]:
-      | ExtractTypeOutput<T[K]>
-      | (T[K]['config']['required'] extends true ? never : undefined)
-  }>
+  export type ExtractFlags<T extends FlagOption> = Prettify<
+    MakeObjectOptional<
+      WritableObject<{
+        [K in keyof T]:
+          | ExtractTypeOutput<T[K]>
+          | (T[K]['config']['required'] extends true ? never : undefined)
+      }>
+    >
+  >
 
   export type ExtractCombinedArgs<TOptions extends NoArgCoreHelper.Options> = [
     ...ExtractArguments<NonNullable<TOptions['arguments']>>,

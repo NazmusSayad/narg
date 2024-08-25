@@ -207,7 +207,7 @@ export module NoArgRoot {
     }
   >
 
-  export type InferFlags<T> = T extends NoArgRoot<
+  export type InferFlags<T> = T extends NoArgProgram<
     string,
     any,
     any,
@@ -216,7 +216,7 @@ export module NoArgRoot {
     ? NoArgProgramHelper.ExtractFlags<TOptions['flags']>
     : never
 
-  export type InferGlobalFlags<T> = T extends NoArgRoot<
+  export type InferGlobalFlags<T> = T extends NoArgProgram<
     string,
     any,
     any,
@@ -225,7 +225,7 @@ export module NoArgRoot {
     ? NoArgProgramHelper.ExtractFlags<TOptions['globalFlags']>
     : never
 
-  export type InferCombinedFlags<T> = T extends NoArgRoot<
+  export type InferCombinedFlags<T> = T extends NoArgProgram<
     string,
     any,
     any,
@@ -234,7 +234,7 @@ export module NoArgRoot {
     ? NoArgProgramHelper.ExtractCombinedFlags<TOptions>
     : never
 
-  export type InferArguments<T> = T extends NoArgRoot<
+  export type InferArguments<T> = T extends NoArgProgram<
     string,
     any,
     any,
@@ -243,7 +243,7 @@ export module NoArgRoot {
     ? NoArgProgramHelper.ExtractArguments<TOptions['arguments']>
     : never
 
-  export type InferOptionalArguments<T> = T extends NoArgRoot<
+  export type InferOptionalArguments<T> = T extends NoArgProgram<
     string,
     any,
     any,
@@ -252,7 +252,7 @@ export module NoArgRoot {
     ? NoArgProgramHelper.ExtractOptionalArguments<TOptions['optionalArguments']>
     : never
 
-  export type InferListArguments<T> = T extends NoArgRoot<
+  export type InferListArguments<T> = T extends NoArgProgram<
     string,
     any,
     any,
@@ -265,7 +265,7 @@ export module NoArgRoot {
         >
     : never
 
-  export type InferCombinedArgs<T> = T extends NoArgRoot<
+  export type InferCombinedArgs<T> = T extends NoArgProgram<
     string,
     any,
     any,

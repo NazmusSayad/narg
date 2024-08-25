@@ -1,6 +1,6 @@
 {
   "name": "noarg",
-  "version": "3.0.20",
+  "version": "3.0.21",
   "scripts": {
     "build": "npmize build",
     "dev": "npmize dev --module cjs",

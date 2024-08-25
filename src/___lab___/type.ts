@@ -34,7 +34,7 @@ const app = NoArg.create('app', {
   },
 })
 
-app.create('sub', {
+const sub = app.create('sub', {
   arguments: [
     {
       name: 'name',
@@ -60,8 +60,8 @@ app.on((args, flags, config) => {
 app.start(['name'])
 
 type Flags = NoArg.InferFlags<typeof app>
-type GlobalFlags = NoArg.InferGlobalFlags<typeof app>
+type GlobalFlags = NoArg.InferGlobalFlags<typeof sub>
 type CombinedFlags = NoArg.InferCombinedFlags<typeof app>
-type Arguments = NoArg.InferArguments<typeof app>
-type OptArgs = NoArg.InferOptionalArguments<typeof app>
-type List = NoArg.InferListArguments<typeof app>
+type Arguments = NoArg.InferArguments<typeof sub>
+type OptArgs = NoArg.InferOptionalArguments<typeof sub>
+type List = NoArg.InferListArguments<typeof sub>

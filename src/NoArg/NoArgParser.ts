@@ -193,7 +193,8 @@ export class NoArgParser<
 
     return (record: NoArgParserHelper.ParsedFlagRecord) => {
       if (record.argType === 'flag' || record.argType === 'alias') {
-        const { schemaKey, schema } = this.findFlagInSchema(record)
+        const matchedSchema = this.findFlagInSchema(record)
+        const { schemaKey, schema } = matchedSchema
 
         if (mustHaveAnyValue) handleMustHaveValueRecord()
         if (schemaKey in output) handleDuplicateValue(record, schemaKey)

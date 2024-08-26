@@ -19,6 +19,7 @@ import { TypeArray } from '../schema/TypeArray'
 import { TypeTuple } from '../schema/TypeTuple'
 import { ExtractTypeOutput } from '../schema/type.t'
 import { CustomTable } from '../helpers/custom-table'
+import { getArrayLengthStr } from '../utils'
 
 export class NoArgProgram<
   TName extends string,
@@ -115,7 +116,7 @@ export class NoArgProgram<
     return child
   }
 
-  protected onActionCallback?: NoArgProgramHelper.ExtractAction<
+  protected onActionCallback?: NoArgExtract.ExtractAction<
     TSystem,
     TConfig,
     TOptions
@@ -199,7 +200,7 @@ export class NoArgProgram<
     })(this)
 
     if (this.programs.size) {
-      commandItems.push(this.colors.programs(`(program)`))
+      commandItems.push(this.colors.programs('[' + 'program' + ']'))
     }
 
     this.options.arguments.forEach((argument) => {
@@ -212,7 +213,7 @@ export class NoArgProgram<
 
     if (this.options.listArgument) {
       commandItems.push(
-        this.colors.arguments('[...' + this.options.listArgument.name + ']')
+        this.colors.arguments('...[' + this.options.listArgument.name + ']')
       )
     }
 
@@ -226,7 +227,10 @@ export class NoArgProgram<
     if (this.options.trailingArguments) {
       commandItems.push(
         this.colors.description(this.options.trailingArguments),
-        this.colors.description('[...trailing-args]')
+        this.colors.description(
+          this.options.customRenderHelp?.helpUsageTrailingArgsLabel ??
+            `[...trailing-args]`
+        )
       )
     }
 
@@ -278,32 +282,17 @@ export class NoArgProgram<
       const { name, type, minLength, maxLength, description } =
         this.options.listArgument
 
-      const hasMinLength = minLength !== undefined
-      const hasMaxLength = maxLength !== undefined
-      let nameSuffix = this.options.listArgument.minLength ? '' : '?'
-
-      if (hasMinLength || hasMaxLength) {
-        nameSuffix += '\n'
-
-        if (hasMinLength) {
-          nameSuffix += 'Min: ' + colors.yellow(String(minLength))
-        }
-
-        nameSuffix += '\n'
-
-        if (hasMaxLength) {
-          nameSuffix += 'Max: ' + colors.yellow(String(maxLength))
-        }
-      }
-
       tables.push([
         this.colors.arguments(name),
-        this.colors.type(type.name) + '[]' + nameSuffix,
+        this.colors.type(type.name) +
+          `[${getArrayLengthStr(minLength, maxLength)}]` +
+          (minLength && minLength > 0 ? '' : '?'),
+
         this.colors.description(description ?? this.colors.emptyString),
       ])
     }
 
-    CustomTable([5, 3, 10], ...tables)
+    CustomTable([6, 5, 10], ...tables)
   }
 
   private renderHelpFlags(flags: FlagOption) {
@@ -342,9 +331,10 @@ export class NoArgProgram<
         const optionType =
           (schema instanceof TypeArray
             ? this.colors.type(schema.config.schema.name) +
-              `[${schema.config.minLength ?? '0'}-${
-                schema.config.maxLength ?? '∞'
-              }]`
+              `[${getArrayLengthStr(
+                schema.config.minLength,
+                schema.config.maxLength
+              )}]`
             : schema instanceof TypeTuple
             ? '[' +
               schema.config.schema
@@ -758,9 +748,11 @@ export class NoArgProgram<
 
 export module NoArgProgramHelper {
   export type Config = NoArgCoreHelper.Config & {
-    skipGlobalFlags?: boolean
+    readonly skipGlobalFlags?: boolean
   }
+}
 
+export module NoArgExtract {
   export type ExtractArguments<T extends ArgumentsOptions[]> = {
     [K in keyof T]: ExtractTypeOutput<T[K]['type']>
   }

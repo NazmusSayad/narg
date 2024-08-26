@@ -38,6 +38,7 @@ const app = NoArg.create('app', {
   flags: {
     A: NoArg.string(),
     b: NoArg.number(),
+    abc: NoArg.array(NoArg.string()).minLength(1),
   },
 
   arguments: [
@@ -45,13 +46,17 @@ const app = NoArg.create('app', {
   ],
 
   listArgument: {
-    name: 'super',
+    name: 'args to pass',
     description: 'List of items',
     type: NoArg.string(),
     maxLength: 1,
   },
 
   system: {},
+  trailingArguments: '--',
+  customRenderHelp: {
+    helpUsageTrailingArgsLabel: '--[flags/args to pass]',
+  },
 })
 
 const child = app.create('child', {
@@ -63,10 +68,6 @@ const child = app.create('child', {
   notes: ['This is a note'],
 
   ...devAndBuild,
-
-  customRenderHelp: {
-    helpUsageStructure: 'Custom flags',
-  },
 })
 
 child.on((args, flags, config) => {
@@ -76,4 +77,4 @@ child.on((args, flags, config) => {
   console.log(flags)
 })
 
-app.start(['child', 'boom', '-h'])
+app.start(['child', '--super', '456'])

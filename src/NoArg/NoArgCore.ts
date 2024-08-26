@@ -79,6 +79,7 @@ export module NoArgCoreHelper {
 
     readonly customRenderHelp?: {
       helpUsageStructure?: string
+      helpUsageTrailingArgsLabel?: string
     }
   }
 

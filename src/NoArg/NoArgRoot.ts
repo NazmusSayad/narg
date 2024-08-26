@@ -7,8 +7,8 @@ import { TypeNumber } from '../schema/TypeNumber'
 import { TypeString } from '../schema/TypeString'
 import { TypeBoolean } from '../schema/TypeBoolean'
 import { TSchemaPrimitive } from '../schema/type.t'
-import { NoArgProgram, NoArgProgramHelper } from './NoArgProgram'
 import { MergeObject, MergeObjectPrettify, Prettify } from '../types/util.t'
+import { NoArgProgram, NoArgExtract, NoArgProgramHelper } from './NoArgProgram'
 
 export class NoArgRoot<
   TName extends string,
@@ -213,7 +213,7 @@ export module NoArgRoot {
     any,
     infer TOptions
   >
-    ? NoArgProgramHelper.ExtractFlags<TOptions['flags']>
+    ? NoArgExtract.ExtractFlags<TOptions['flags']>
     : never
 
   export type InferGlobalFlags<T> = T extends NoArgProgram<
@@ -222,7 +222,7 @@ export module NoArgRoot {
     any,
     infer TOptions
   >
-    ? NoArgProgramHelper.ExtractFlags<TOptions['globalFlags']>
+    ? NoArgExtract.ExtractFlags<TOptions['globalFlags']>
     : never
 
   export type InferCombinedFlags<T> = T extends NoArgProgram<
@@ -231,7 +231,7 @@ export module NoArgRoot {
     any,
     infer TOptions
   >
-    ? NoArgProgramHelper.ExtractCombinedFlags<TOptions>
+    ? NoArgExtract.ExtractCombinedFlags<TOptions>
     : never
 
   export type InferArguments<T> = T extends NoArgProgram<
@@ -240,7 +240,7 @@ export module NoArgRoot {
     any,
     infer TOptions
   >
-    ? NoArgProgramHelper.ExtractArguments<TOptions['arguments']>
+    ? NoArgExtract.ExtractArguments<TOptions['arguments']>
     : never
 
   export type InferOptionalArguments<T> = T extends NoArgProgram<
@@ -249,7 +249,7 @@ export module NoArgRoot {
     any,
     infer TOptions
   >
-    ? NoArgProgramHelper.ExtractOptionalArguments<TOptions['optionalArguments']>
+    ? NoArgExtract.ExtractOptionalArguments<TOptions['optionalArguments']>
     : never
 
   export type InferListArguments<T> = T extends NoArgProgram<
@@ -260,9 +260,7 @@ export module NoArgRoot {
   >
     ? undefined extends TOptions['listArgument']
       ? never
-      : NoArgProgramHelper.ExtractListArgument<
-          NonNullable<TOptions['listArgument']>
-        >
+      : NoArgExtract.ExtractListArgument<NonNullable<TOptions['listArgument']>>
     : never
 
   export type InferCombinedArgs<T> = T extends NoArgProgram<
@@ -271,6 +269,6 @@ export module NoArgRoot {
     any,
     infer TOptions
   >
-    ? NoArgProgramHelper.ExtractCombinedArgs<TOptions>
+    ? NoArgExtract.ExtractCombinedArgs<TOptions>
     : never
 }

@@ -1,10 +1,10 @@
 {
   "name": "noarg",
-  "version": "3.0.21",
+  "version": "3.0.22",
   "scripts": {
     "build": "npmize build",
     "dev": "npmize dev --module cjs",
-    "lab": "w ./src/___lab___/index.ts",
+    "lab": "ur ./src/___lab___/index.ts --reload\\",
     "cjs": "nw ./dist/___lab___/index.cjs",
     "mjs": "nw ./dist/___lab___/index.mjs"
   },

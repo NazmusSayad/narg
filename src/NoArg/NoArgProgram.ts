@@ -1,4 +1,10 @@
 import {
+  Prettify,
+  MergeObject,
+  WritableObject,
+  MakeObjectOptional,
+} from '../types/util.t'
+import {
   FlagOption,
   ArgumentsOptions,
   ListArgumentsOption,
@@ -13,12 +19,6 @@ import { TypeArray } from '../schema/TypeArray'
 import { TypeTuple } from '../schema/TypeTuple'
 import { ExtractTypeOutput } from '../schema/type.t'
 import { CustomTable } from '../helpers/custom-table'
-import {
-  Prettify,
-  MergeObject,
-  MakeObjectOptional,
-  WritableObject,
-} from '../types/util.t'
 
 export class NoArgProgram<
   TName extends string,
@@ -170,7 +170,26 @@ export class NoArgProgram<
   }
 
   // HELP METHOD
-  private renderHelpOverview() {
+  private renderHelpIntro() {
+    console.log(
+      colors.cyan.bold(this.name),
+      this.options.description
+        ? this.colors.description(this.options.description)
+        : ''
+    )
+  }
+
+  private renderHelpUsageIntro() {
+    console.log(colors.bold('Usage:'))
+    console.log('')
+
+    if (this.options.customRenderHelp?.helpUsageStructure) {
+      return console.log(
+        colors.cyan('$'),
+        this.options.customRenderHelp?.helpUsageStructure
+      )
+    }
+
     const commandItems: string[] = [colors.dim(this.name)]
 
     ;(function getParent(current: NoArgProgram<any, any, any, any>) {
@@ -211,16 +230,6 @@ export class NoArgProgram<
       )
     }
 
-    console.log(
-      colors.cyan.bold(this.name),
-      this.options.description
-        ? this.colors.description(this.options.description)
-        : ''
-    )
-
-    console.log('')
-    console.log(colors.bold('Usage:'))
-    console.log('')
     console.log([colors.cyan('$'), ...commandItems].filter(Boolean).join(' '))
   }
 
@@ -304,14 +313,18 @@ export class NoArgProgram<
         if (keyA < keyB) return -1
         return 0
       })
-      .sort(([, a]) => {
-        const isRequired = a.config.required
-        const hasDefault =
-          a.config.default !== undefined || a.config.askQuestion !== undefined
+      .sort(([, aSchema], [, bSchema]) => {
+        const aIsMust =
+          aSchema.config.required &&
+          aSchema.config.default === undefined &&
+          aSchema.config.askQuestion === undefined
 
-        if (isRequired && !hasDefault) return -3
-        if (isRequired && hasDefault) return -2
-        return 1
+        const bIsMust =
+          bSchema.config.required &&
+          bSchema.config.default === undefined &&
+          bSchema.config.askQuestion === undefined
+
+        return aIsMust === bIsMust ? 0 : aIsMust ? -1 : 1
       })
 
       .map<[CellValue, CellValue, CellValue]>(([name, schema]) => {
@@ -328,10 +341,10 @@ export class NoArgProgram<
 
         const optionType =
           (schema instanceof TypeArray
-            ? this.colors.type(schema.name) +
-              '[' +
-              this.colors.type(schema.config.schema.name) +
-              ']'
+            ? this.colors.type(schema.config.schema.name) +
+              `[${schema.config.minLength ?? '0'}-${
+                schema.config.maxLength ?? '∞'
+              }]`
             : schema instanceof TypeTuple
             ? '[' +
               schema.config.schema
@@ -339,11 +352,10 @@ export class NoArgProgram<
                 .join(', ') +
               ']'
             : this.colors.type(schema.name)) +
-          (schema.config.required
-            ? schema.config.default !== undefined ||
-              schema.config.askQuestion !== undefined
-              ? '?'
-              : ''
+          (schema.config.required &&
+          schema.config.default === undefined &&
+          schema.config.askQuestion === undefined
+            ? ''
             : '?')
 
         return [
@@ -364,7 +376,10 @@ export class NoArgProgram<
    * program.renderHelp()
    */
   public renderHelp() {
-    this.renderHelpOverview()
+    this.renderHelpIntro()
+    console.log('')
+
+    this.renderHelpUsageIntro()
     console.log('')
 
     if (this.programs.size) {

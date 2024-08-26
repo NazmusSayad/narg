@@ -10,7 +10,10 @@ function callback(args: any, flags: any) {
 const app = NoArg.create('app', {
   description: 'This is an app',
   flags: {
-    zzzz: NoArg.string(),
+    vbc: NoArg.string().ask('who are you?'),
+    bbc: NoArg.string().ask('who are you?'),
+    abc: NoArg.string().ask('who are you?'),
+    zzz: NoArg.string(),
     sup: NoArg.string().ask('who are you?'),
     test: NoArg.array(NoArg.string().default('test'))
       .required()
@@ -68,7 +71,7 @@ const superInner = inner
       no: NoArg.boolean(),
       test: NoArg.string('1', '2').ask('test'),
     },
-    config: { help: false },
+    config: { help: true },
   })
   .on((args, flags) => {
     console.log({ args, flags })
@@ -98,8 +101,8 @@ inputTest.on(([result], flags) => {
 // inputTest.start([])
 
 app.start([
-  'inner',
-  'superInner',
+  // 'inner',
+  // 'superInner',
   // 'arg',
   // 'opt',
   // '1',
@@ -117,5 +120,5 @@ app.start([
   'true',
   // '--silent',
   // 'false',
-  '--no',
+  '--help',
 ])

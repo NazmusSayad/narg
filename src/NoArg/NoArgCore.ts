@@ -76,6 +76,10 @@ export module NoArgCoreHelper {
 
     readonly flags: FlagOption
     readonly globalFlags: FlagOption
+
+    readonly customRenderHelp?: {
+      helpUsageStructure?: string
+    }
   }
 
   export const defaultConfig = {

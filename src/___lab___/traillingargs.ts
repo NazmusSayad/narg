@@ -31,9 +31,7 @@ const devAndBuild = NoArg.defineConfig({
 
   trailingArguments: '',
 
-  config: {
-    help: false,
-  },
+  config: {},
 })
 
 const app = NoArg.create('app', {
@@ -65,6 +63,10 @@ const child = app.create('child', {
   notes: ['This is a note'],
 
   ...devAndBuild,
+
+  customRenderHelp: {
+    helpUsageStructure: 'Custom flags',
+  },
 })
 
 child.on((args, flags, config) => {
@@ -74,4 +76,4 @@ child.on((args, flags, config) => {
   console.log(flags)
 })
 
-app.start(['child', 'boom'])
+app.start(['child', 'boom', '-h'])

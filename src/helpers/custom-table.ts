@@ -1,7 +1,7 @@
 import { CellValue } from 'cli-table3'
 import Table from '../lib/table'
 
-const MAX_WIDTH = 80
+const MAX_WIDTH = 120
 const MIN_WIDTH = 40
 const terminalWidth = process.stdout.columns - 4
 const tableWidth =

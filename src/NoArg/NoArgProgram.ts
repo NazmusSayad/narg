@@ -249,7 +249,10 @@ export class NoArgProgram<
       ]
     )
 
-    CustomTable([5, 13], ...programData)
+    CustomTable(
+      { sizes: [5, 13], border: this.system.enableHelpBoxBorder },
+      ...programData
+    )
   }
 
   private renderHelpArguments() {
@@ -292,7 +295,10 @@ export class NoArgProgram<
       ])
     }
 
-    CustomTable([6, 5, 10], ...tables)
+    CustomTable(
+      { sizes: [6, 5, 10], border: this.system.enableHelpBoxBorder },
+      ...tables
+    )
   }
 
   private renderHelpFlags(flags: FlagOption) {
@@ -357,7 +363,10 @@ export class NoArgProgram<
         ]
       })
 
-    CustomTable([6, 5, 10], ...optionData)
+    CustomTable(
+      { sizes: [6, 5, 10], border: this.system.enableHelpBoxBorder },
+      ...optionData
+    )
   }
 
   /**
@@ -524,7 +533,7 @@ export class NoArgProgram<
 
   private renderUsageHowToUseOptions() {
     CustomTable(
-      [1, 3, 2],
+      { sizes: [1, 3, 2], border: this.system.enableHelpBoxBorder },
       this.renderUsageUtils.tableGroup(
         'string',
         'string',

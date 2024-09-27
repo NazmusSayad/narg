@@ -101,6 +101,7 @@ export module NoArgCoreHelper {
     readonly allowDuplicateFlagForPrimitive?: boolean
     readonly overwriteDuplicateFlagForList?: boolean
     readonly splitListByComma?: boolean
+    readonly enableHelpBoxBorder?: boolean
   }
 
   export const defaultSystem = {

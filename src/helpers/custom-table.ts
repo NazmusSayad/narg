@@ -16,22 +16,43 @@ type CustomTableItems<TArray extends number[]> = {
 }
 
 export function CustomTable<const TWidths extends number[]>(
-  widths: TWidths,
+  { sizes, ...options }: { sizes: TWidths; border?: boolean },
   ...items: CustomTableItems<TWidths>[]
 ) {
   const maxLength = Math.max(...items.map((item) => item.length))
-  const totalWidth = widths.reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0
-  const colWidths = widths.map((width) => {
+  const totalWidth = sizes.reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0
+  const colWidths = sizes.map((width) => {
     return Math.floor((tableWidth / totalWidth) * (width ?? 1))
   })
 
   const table = new Table!({
-    chars: {
-      'top-left': '╭',
-      'bottom-left': '╰',
-      'top-right': '╮',
-      'bottom-right': '╯',
-    },
+    style: options.border
+      ? {}
+      : { compact: true, 'padding-left': 0, 'padding-right': 0 },
+    chars: options.border
+      ? {
+          'top-left': '╭',
+          'bottom-left': '╰',
+          'top-right': '╮',
+          'bottom-right': '╯',
+        }
+      : {
+          'bottom-left': '',
+          'bottom-mid': '',
+          'bottom-right': '',
+          'left-mid': '',
+          'mid-mid': '',
+          'right-mid': '',
+          'top-left': '',
+          'top-mid': '',
+          'top-right': '',
+          bottom: '',
+          left: '',
+          middle: '',
+          mid: '',
+          right: '',
+          top: '',
+        },
 
     colWidths,
     wordWrap: true,

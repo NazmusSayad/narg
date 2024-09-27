@@ -1,9 +1,4 @@
-import MJSTable from 'cli-table3'
-import * as CJSTable from 'cli-table3'
-import currentModule from './currentModule'
+import table from 'cli-table3'
 
-export default currentModule.isCJS
-  ? CJSTable
-  : currentModule.isESM
-  ? MJSTable
-  : (null as never)
+// @ts-ignore
+export default (table.default ?? table) as typeof table

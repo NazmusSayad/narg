@@ -1,9 +1,4 @@
-import mjs from 'ansi-colors'
-import * as cjs from 'ansi-colors'
-import currentModule from './currentModule'
+import colors from 'ansi-colors'
 
-export default currentModule.isCJS
-  ? cjs
-  : currentModule.isESM
-  ? mjs
-  : (null as never)
+// @ts-ignore
+export default (colors.default ?? colors) as typeof colors

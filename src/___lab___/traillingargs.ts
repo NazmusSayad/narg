@@ -1,6 +1,13 @@
 import NoArg from '..'
 
 const devAndBuild = NoArg.defineConfig({
+  arguments: [
+    {
+      name: '@',
+      type: NoArg.string().description('Root directory'),
+    },
+  ],
+
   optionalArguments: [
     {
       name: 'root',
@@ -52,7 +59,9 @@ const app = NoArg.create('app', {
     maxLength: 1,
   },
 
-  system: {},
+  system: {
+    // enableHelpBoxBorder: true,
+  },
   trailingArguments: '--',
   customRenderHelp: {
     helpUsageTrailingArgsLabel: '--[flags/args to pass]',
@@ -77,4 +86,4 @@ child.on((args, flags, config) => {
   console.log(flags)
 })
 
-app.start(['child', '--super', '456'])
+app.start(['child', '--help', '456'])

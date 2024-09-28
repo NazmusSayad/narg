@@ -16,26 +16,37 @@
 - Automatically generates `help` and `usage` documentation.
 - Supports disabling and enabling CLI colors.
 
-### Installation
+### Command Structure
+
+```sh
+app (program) <required arguments> <optional arguments> ...<list arguments> [options] [ignored arguments]
+```
+
+### Auto Help and Usages creation
+
+<details>
+  <summary>Click to see cli help</summary>
+
+![image](https://github.com/user-attachments/assets/1c9048dc-6121-4beb-85c4-ce87b00de84b)
+
+</details>
+
+<details>
+  <summary>Click to see cli usages docs</summary>
+
+![image](https://github.com/user-attachments/assets/0491b11f-5f64-4b77-83c2-a49de9833170)
+
+</details>
+
+## Getting Started
+
+#### Installation
 
 To install `noarg` package, you can use npm:
 
 ```bash
 npm install noarg
 ```
-
-### Command Structure
-
-```sh
-app (program) <required arguments> <optional arguments> ...<list arguments> [options]
-```
-
-### Auto Help and Usages creation
-
-![image](https://github.com/user-attachments/assets/1c9048dc-6121-4beb-85c4-ce87b00de84b)
-![image](https://github.com/user-attachments/assets/0491b11f-5f64-4b77-83c2-a49de9833170)
-
-### Getting Started
 
 #### Importing the Package
 

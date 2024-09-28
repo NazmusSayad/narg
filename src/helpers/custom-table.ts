@@ -1,35 +1,49 @@
-import { CellValue } from 'cli-table3'
 import Table from '../lib/table'
+import { CellValue } from 'cli-table3'
 
-const MAX_WIDTH = 120
-const MIN_WIDTH = 40
-const terminalWidth = process.stdout.columns - 4
-const tableWidth =
-  terminalWidth > MAX_WIDTH
-    ? MAX_WIDTH
-    : terminalWidth < MIN_WIDTH
-    ? MIN_WIDTH
-    : terminalWidth
+const MIN_WIDTH = 30
+const terminalWidth = process.stdout.columns - 3
+const tableWidth = terminalWidth < MIN_WIDTH ? MIN_WIDTH : terminalWidth
 
-type CustomTableItems<TArray extends number[]> = {
-  [K in keyof TArray]: K extends `${number}` ? CellValue : TArray[K]
+type CustomTableItems<TArray extends CustomTableSize[]> = CellValue[] & {
+  length: TArray['length']
 }
 
-export function CustomTable<const TWidths extends number[]>(
-  { sizes, ...options }: { sizes: TWidths; border?: boolean },
+type CustomTableSize = {
+  flex: number
+  minWidth?: number
+  maxWidth?: number
+}
+
+export function CustomTable<const TWidths extends CustomTableSize[]>(
+  { sizes, ...config }: { sizes: TWidths; border?: boolean },
   ...items: CustomTableItems<TWidths>[]
 ) {
-  const maxLength = Math.max(...items.map((item) => item.length))
-  const totalWidth = sizes.reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0
-  const colWidths = sizes.map((width) => {
-    return Math.floor((tableWidth / totalWidth) * (width ?? 1))
+  const columnsCount = Math.max(...items.map((item) => item.length))
+  let availableWidth = tableWidth - columnsCount
+  let combinedFlex =
+    sizes.reduce((total, { flex }) => (total ?? 0) + (flex ?? 0), 0) ?? 0
+
+  const colWidths = sizes.map((size) => {
+    function getWidth() {
+      const width = Math.floor(
+        (availableWidth / combinedFlex) * (size.flex ?? 1)
+      )
+
+      if (size.minWidth && width < size.minWidth) return size.minWidth
+      if (size.maxWidth && width > size.maxWidth) return size.maxWidth
+      return width
+    }
+
+    const width = getWidth()
+    availableWidth -= width
+    combinedFlex -= size.flex
+    return width
   })
 
   const table = new Table!({
-    style: options.border
-      ? {}
-      : { compact: true, 'padding-left': 0, 'padding-right': 0 },
-    chars: options.border
+    style: config.border ? {} : { compact: true },
+    chars: config.border
       ? {
           'top-left': '╭',
           'bottom-left': '╰',
@@ -56,7 +70,7 @@ export function CustomTable<const TWidths extends number[]>(
 
     colWidths,
     wordWrap: true,
-    rowAligns: maxLength > 0 ? new Array(maxLength).fill('top') : [],
+    rowAligns: columnsCount > 0 ? new Array(columnsCount).fill('top') : [],
   })
 
   table.push(...items)

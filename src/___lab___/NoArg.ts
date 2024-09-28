@@ -1,6 +1,8 @@
 import NoArg from '..'
 import colors from '../lib/colors'
 
+// NoArg.colors.disable()
+
 function callback(args: any, flags: any) {
   console.log(colors.green('-----------------'))
   console.log(args)
@@ -10,7 +12,18 @@ function callback(args: any, flags: any) {
 const app = NoArg.create('app', {
   description: 'This is an app',
   flags: {
-    vbc: NoArg.string().ask('who are you?'),
+    vbc: NoArg.string(
+      '1',
+      '2',
+      '3',
+      'asdf',
+      '5',
+      '6',
+      '7',
+      '8',
+      '234',
+      '10'
+    ).ask('who are you?'),
     bbc: NoArg.string().ask('who are you?'),
     abc: NoArg.string().ask('who are you?'),
     zzz: NoArg.string(),
@@ -34,7 +47,7 @@ const app = NoArg.create('app', {
   // optionalArguments: [{ name: 'nope', type: NoArg.number() }],
   // listArgument: { name: 'test', minLength: 2, maxLength: 3 },
 
-  system: {},
+  system: { enableHelpBoxBorder: true },
 }).on(callback)
 
 const inner = app
@@ -120,5 +133,5 @@ app.start([
   'true',
   // '--silent',
   // 'false',
-  '--help',
+  '-h',
 ])

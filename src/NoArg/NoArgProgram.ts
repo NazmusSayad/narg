@@ -20,6 +20,8 @@ import { TypeTuple } from '../schema/TypeTuple'
 import { ExtractTypeOutput } from '../schema/type.t'
 import { CustomTable } from '../helpers/custom-table'
 import { getArrayLengthStr } from '../utils'
+import { TypeString } from '../schema/TypeString'
+import { TypeNumber } from '../schema/TypeNumber'
 
 export class NoArgProgram<
   TName extends string,
@@ -163,11 +165,11 @@ export class NoArgProgram<
   private colors = {
     type: colors.yellow,
     description: colors.reset,
-    programs: colors.red,
+    programs: colors.magenta,
     arguments: colors.blue,
     flags: colors.cyan,
     trailingArgs: colors.green,
-    emptyString: colors.dim('---'),
+    emptyString: colors.dim('┈'),
   }
 
   // HELP METHOD
@@ -182,7 +184,6 @@ export class NoArgProgram<
 
   private renderHelpUsageIntro() {
     console.log(colors.bold('Usage:'))
-    console.log('')
 
     if (this.options.customRenderHelp?.helpUsageStructure) {
       return console.log(
@@ -250,7 +251,10 @@ export class NoArgProgram<
     )
 
     CustomTable(
-      { sizes: [5, 13], border: this.system.enableHelpBoxBorder },
+      {
+        sizes: [{ flex: 5, maxWidth: 20 }, { flex: 13 }],
+        border: this.system.enableHelpBoxBorder,
+      },
       ...programData
     )
   }
@@ -296,7 +300,14 @@ export class NoArgProgram<
     }
 
     CustomTable(
-      { sizes: [6, 5, 10], border: this.system.enableHelpBoxBorder },
+      {
+        sizes: [
+          { flex: 6, maxWidth: 20 },
+          { flex: 5, maxWidth: 20 },
+          { flex: 10 },
+        ],
+        border: this.system.enableHelpBoxBorder,
+      },
       ...tables
     )
   }
@@ -354,17 +365,34 @@ export class NoArgProgram<
             ? ''
             : '?')
 
+        const enumValues =
+          (schema instanceof TypeString || schema instanceof TypeNumber) &&
+          schema.config.enum?.size
+            ? colors.blue('\nChoices: ') +
+              [...schema.config.enum.values()]
+                .map((item) => colors.green(String(item)))
+                .join(', ')
+            : ''
+
         return [
           optionName,
           optionType,
           this.colors.description(
-            schema.config.description ?? this.colors.emptyString
+            ((schema.config.description ?? '') + enumValues).trim() ||
+              this.colors.emptyString
           ),
         ]
       })
 
     CustomTable(
-      { sizes: [6, 5, 10], border: this.system.enableHelpBoxBorder },
+      {
+        sizes: [
+          { flex: 6, maxWidth: 20 },
+          { flex: 5, maxWidth: 20 },
+          { flex: 10 },
+        ],
+        border: this.system.enableHelpBoxBorder,
+      },
       ...optionData
     )
   }
@@ -437,8 +465,6 @@ export class NoArgProgram<
         colors.yellow('-hu'),
         'flag to see how to use the program'
       )
-
-      console.log('')
     }
   }
 
@@ -533,7 +559,14 @@ export class NoArgProgram<
 
   private renderUsageHowToUseOptions() {
     CustomTable(
-      { sizes: [1, 3, 2], border: this.system.enableHelpBoxBorder },
+      {
+        sizes: [
+          { flex: 1, minWidth: 8, maxWidth: 20 },
+          { flex: 3, maxWidth: 40 },
+          { flex: 2, maxWidth: 40 },
+        ],
+        border: this.system.enableHelpBoxBorder,
+      },
       this.renderUsageUtils.tableGroup(
         'string',
         'string',

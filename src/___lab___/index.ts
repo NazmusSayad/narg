@@ -1,2 +1,3 @@
-console.clear()
-import './traillingargs'
+// console.clear()
+// import './table'
+import './NoArg'

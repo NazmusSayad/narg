@@ -1,5 +1,5 @@
-import { Prettify } from '../types/util.t'
 import { TypeCore } from './TypeCore'
+import { Prettify } from '../types/util.t'
 import { ResultErr, ResultOk } from './result'
 
 export class TypeString<

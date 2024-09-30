@@ -1,6 +1,6 @@
+import { TypeCore } from './TypeCore'
 import { Prettify } from '../types/util.t'
 import { ResultErr, ResultOk } from './result'
-import { TypeCore } from './TypeCore'
 
 export class TypeNumber<
   const TConfig extends TypeNumber.Config

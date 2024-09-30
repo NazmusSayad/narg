@@ -12,16 +12,16 @@ import {
 } from './types.t'
 import colors from '../lib/colors'
 import { CellValue } from 'cli-table3'
-import { NoArgCoreHelper } from './NoArgCore'
 import { NoArgError } from './NoArgError'
 import { NoArgParser } from './NoArgParser'
+import { getArrayLengthStr } from '../utils'
+import { NoArgCoreHelper } from './NoArgCore'
 import { TypeArray } from '../schema/TypeArray'
 import { TypeTuple } from '../schema/TypeTuple'
-import { ExtractTypeOutput } from '../schema/type.t'
-import { CustomTable } from '../helpers/custom-table'
-import { getArrayLengthStr } from '../utils'
 import { TypeString } from '../schema/TypeString'
 import { TypeNumber } from '../schema/TypeNumber'
+import { ExtractTypeOutput } from '../schema/type.t'
+import { CustomTable } from '../helpers/custom-table'
 
 export class NoArgProgram<
   TName extends string,

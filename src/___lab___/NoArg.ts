@@ -133,5 +133,5 @@ app.start([
   'true',
   // '--silent',
   // 'false',
-  '-h',
+  // '-h',
 ])

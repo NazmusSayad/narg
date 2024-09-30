@@ -1,6 +1,6 @@
 {
   "name": "noarg",
-  "version": "3.1.6",
+  "version": "3.1.7",
   "scripts": {
     "dev": "npmize dev",
     "build": "npmize build",
@@ -16,17 +16,11 @@
   },
   "devDependencies": {
     "@types/node": "^22.7.4",
-    "npmize": "^1.1.9",
+    "npmize": "^1.1.11",
     "typescript": "^5.6.2"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "exports": {
-    ".": {
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs"
-    }
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/NazmusSayad/noarg.git"

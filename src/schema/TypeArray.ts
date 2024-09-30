@@ -1,8 +1,8 @@
-import { Prettify } from '../types/util.t'
-import { ResultErr, ResultOk } from './result'
-import { TSchemaPrimitive } from './type.t'
 import { TypeCore } from './TypeCore'
 import { TypeString } from './TypeString'
+import { Prettify } from '../types/util.t'
+import { TSchemaPrimitive } from './type.t'
+import { ResultErr, ResultOk } from './result'
 
 export class TypeArray<
   const TConfig extends TypeArray.Config

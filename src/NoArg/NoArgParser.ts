@@ -1,12 +1,12 @@
 import colors from '../lib/colors'
 import askCli from '../helpers/ask-cli'
-import { NoArgCore, NoArgCoreHelper } from './NoArgCore'
 import { NoArgError } from './NoArgError'
-import { TSchema, TSchemaPrimitive } from '../schema/type.t'
 import { TypeTuple } from '../schema/TypeTuple'
 import { TypeArray } from '../schema/TypeArray'
 import type { NoArgProgram } from './NoArgProgram'
 import { TypeBoolean } from '../schema/TypeBoolean'
+import { NoArgCore, NoArgCoreHelper } from './NoArgCore'
+import { TSchema, TSchemaPrimitive } from '../schema/type.t'
 import splitTrailingArgs from '../utils/split-trailing-args'
 
 export class NoArgParser<
@@ -68,19 +68,20 @@ export class NoArgParser<
     const combinedFlags = { ...this.options.globalFlags, ...this.options.flags }
 
     if (record.argType === 'flag') {
-      const schema = combinedFlags[record.key!]
-      if (schema) return { schemaKey: record.key!, schema }
+      const schema = combinedFlags[record.key]
+      if (schema) return { schemaKey: record.key, schema }
     }
 
     if (record.argType === 'alias') {
       const found = Object.entries(combinedFlags).find(([, schema]) => {
-        return schema.config.aliases?.includes(record.key!)
+        return schema.config.aliases?.includes(record.key)
       })
 
       if (found) return { schemaKey: found[0], schema: found[1] }
     }
 
-    throw new NoArgError(`Unknown option ${colors.red(record.arg)} entered`)
+    if (this.system.skipUnknownFlag) return
+    throw new NoArgError(`Unknown option ${colors.red(record.arg)} received`)
   }
 
   private getFlagMetadata(rawArg: string): NoArgParserHelper.ParsedFlagRecord {
@@ -135,10 +136,12 @@ export class NoArgParser<
     output: Record<string, NoArgParserHelper.ParsedFlagWithSchema>
   ) {
     let mustHaveAnyValue = false
-    let prevSchemaKeyRecord: NoArgParserHelper.ParsedFlagRecord & {
-      schemaKey: string
-      schema: TSchema
-    }
+    let prevSchemaKeyRecord:
+      | (NoArgParserHelper.ParsedFlagRecord & {
+          schemaKey: string
+          schema: TSchema
+        })
+      | null = null
 
     const handleDuplicateValue = (
       record: NoArgParserHelper.ParsedFlagRecord,
@@ -180,23 +183,25 @@ export class NoArgParser<
     }
 
     const handleMustHaveValueRecord = () => {
-      const outputRecord = output[prevSchemaKeyRecord.schemaKey]
-      if (prevSchemaKeyRecord.schema instanceof TypeBoolean) {
-        outputRecord.values.push('true')
-        return (mustHaveAnyValue = false)
+      const outputRecord = output[prevSchemaKeyRecord!.schemaKey]
+      if (prevSchemaKeyRecord!.schema instanceof TypeBoolean) {
+        mustHaveAnyValue = false
+        return outputRecord.values.push('true')
       }
 
       throw new NoArgError(
-        `No value given for option: ${colors.red(prevSchemaKeyRecord.arg)}`
+        `No value given for option: ${colors.red(prevSchemaKeyRecord!.arg)}`
       )
     }
 
     return (record: NoArgParserHelper.ParsedFlagRecord) => {
       if (record.argType === 'flag' || record.argType === 'alias') {
-        const matchedSchema = this.findFlagInSchema(record)
-        const { schemaKey, schema } = matchedSchema
-
         if (mustHaveAnyValue) handleMustHaveValueRecord()
+
+        const matched = this.findFlagInSchema(record)
+        if (!matched) return (prevSchemaKeyRecord = null)
+
+        const { schemaKey, schema } = matched
         if (schemaKey in output) handleDuplicateValue(record, schemaKey)
         if (record.hasBooleanEndValue) handleBooleanEndValue(record, schema)
 
@@ -217,6 +222,14 @@ export class NoArgParser<
       }
 
       if (record.argType === 'value') {
+        if (!prevSchemaKeyRecord) {
+          if (this.system.skipUnknownFlag) return
+
+          throw new NoArgError(
+            `Unexpected value received: ${colors.yellow(record.arg)}`
+          )
+        }
+
         mustHaveAnyValue = false
         return output[prevSchemaKeyRecord.schemaKey].values.push(record.value)
       }
@@ -351,11 +364,15 @@ export class NoArgParser<
       }
 
       if (!isList && argValue.values.length > 1) {
-        throw new NoArgError(
-          `Multiple value entered \`${argValue.values
-            .map(colors.green)
-            .join('` `')}\` for option ${colors.cyan(argValue.arg)}`
-        )
+        if (!this.system.allowMultipleValuesForPrimitive) {
+          throw new NoArgError(
+            `Multiple value entered \`${argValue.values
+              .map(colors.green)
+              .join('` `')}\` for option ${colors.cyan(argValue.arg)}`
+          )
+        }
+
+        argValue.values = [argValue.values[argValue.values.length - 1]]
       }
 
       const { value, error, valid } = argValue.schema.parse(

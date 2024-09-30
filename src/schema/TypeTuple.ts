@@ -1,7 +1,7 @@
-import { ResultErr, ResultOk } from './result'
-import { TSchemaPrimitive } from './type.t'
 import { TypeCore } from './TypeCore'
 import { TypeString } from './TypeString'
+import { TSchemaPrimitive } from './type.t'
+import { ResultErr, ResultOk } from './result'
 
 export class TypeTuple<
   const TConfig extends TypeTuple.Config

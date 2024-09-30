@@ -1,9 +1,9 @@
-import { TypeArray } from './TypeArray'
-import { TypeBoolean } from './TypeBoolean'
 import { TypeCore } from './TypeCore'
+import { TypeArray } from './TypeArray'
+import { TypeTuple } from './TypeTuple'
 import { TypeNumber } from './TypeNumber'
 import { TypeString } from './TypeString'
-import { TypeTuple } from './TypeTuple'
+import { TypeBoolean } from './TypeBoolean'
 
 export type CombineConfig<T, U> = T & {
   config: TypeCore.Config & U

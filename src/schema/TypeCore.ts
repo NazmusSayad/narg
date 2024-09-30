@@ -1,5 +1,5 @@
-import { MergeObject, Prettify } from '../types/util.t'
 import { ResultErr, ResultOk } from './result'
+import { MergeObject, Prettify } from '../types/util.t'
 import verifyOptionName from '../helpers/validate-flag-name'
 import { ParsedResult, ExtractTypeOutput, InferAndUpdateConfig } from './type.t'
 

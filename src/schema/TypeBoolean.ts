@@ -1,5 +1,5 @@
-import { ResultErr, ResultOk } from './result'
 import { TypeCore } from './TypeCore'
+import { ResultErr, ResultOk } from './result'
 
 export class TypeBoolean<
   const TConfig extends TypeBoolean.Config

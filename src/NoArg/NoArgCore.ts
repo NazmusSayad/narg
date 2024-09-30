@@ -95,19 +95,23 @@ export module NoArgCoreHelper {
   } as const
 
   export type System = {
+    readonly skipUnknownFlag?: boolean
     readonly allowEqualAssign: boolean
-    readonly booleanNotSyntaxEnding: string | false
-    readonly allowDuplicateFlagForList: boolean
-    readonly allowDuplicateFlagForPrimitive?: boolean
-    readonly overwriteDuplicateFlagForList?: boolean
+    readonly allowMultipleValuesForPrimitive?: boolean
+
     readonly splitListByComma?: boolean
+    readonly allowDuplicateFlagForPrimitive?: boolean
+    readonly allowDuplicateFlagForList: boolean
+    readonly overwriteDuplicateFlagForList?: boolean
+
+    readonly booleanNotSyntaxEnding: string | false
     readonly enableHelpBoxBorder?: boolean
   }
 
   export const defaultSystem = {
     allowEqualAssign: true,
     allowDuplicateFlagForList: true,
-    booleanNotSyntaxEnding: '\\',
+    booleanNotSyntaxEnding: '!',
   } as const
 
   export type DefaultConfig = typeof defaultConfig

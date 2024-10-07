@@ -82,7 +82,7 @@ export class TypeString<
   }
 }
 
-export module TypeString {
+export namespace TypeString {
   export type Config = TypeCore.Config &
     Partial<{
       regex: RegExp

@@ -457,7 +457,7 @@ export class NoArgParser<
   }
 }
 
-export module NoArgParserHelper {
+export namespace NoArgParserHelper {
   export type ParsedFlagRecord = {
     arg: string
   } & (

@@ -63,7 +63,7 @@ export class TypeNumber<
   }
 }
 
-export module TypeNumber {
+export namespace TypeNumber {
   export type Config = TypeCore.Config &
     Partial<{
       min: number

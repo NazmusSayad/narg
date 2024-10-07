@@ -59,7 +59,7 @@ export class NoArgCore<
   }
 }
 
-export module NoArgCoreHelper {
+export namespace NoArgCoreHelper {
   export type Config = {
     readonly help: boolean
   }

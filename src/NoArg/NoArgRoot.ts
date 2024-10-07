@@ -199,7 +199,7 @@ export class NoArgRoot<
   }
 }
 
-export module NoArgRoot {
+export namespace NoArgRoot {
   export type CreateConfig = Prettify<
     Partial<NoArgCoreHelper.Options> & {
       config?: Partial<NoArgCoreHelper.Config>

@@ -15,7 +15,7 @@ export class TypeBoolean<
   }
 }
 
-export module TypeBoolean {
+export namespace TypeBoolean {
   export type Config = TypeCore.Config & Partial<{}>
   export type Sample = TypeBoolean<Config>
 }

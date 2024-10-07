@@ -788,13 +788,13 @@ export class NoArgProgram<
   }
 }
 
-export module NoArgProgramHelper {
+export namespace NoArgProgramHelper {
   export type Config = NoArgCoreHelper.Config & {
     readonly skipGlobalFlags?: boolean
   }
 }
 
-export module NoArgExtract {
+export namespace NoArgExtract {
   export type ExtractArguments<T extends ArgumentsOptions[]> = {
     [K in keyof T]: ExtractTypeOutput<T[K]['type']>
   }

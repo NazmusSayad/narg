@@ -30,7 +30,7 @@ export class TypeTuple<
   }
 }
 
-export module TypeTuple {
+export namespace TypeTuple {
   export type Config = TypeCore.Config & { schema: TSchemaPrimitive[] }
   export type Sample = TypeTuple<Config>
 }

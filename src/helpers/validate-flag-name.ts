@@ -1,26 +1,26 @@
 import colors from '../lib/colors'
 
-export default function (string: string, booleanFalseEnding?: string) {
-  if (string.length == 0) {
+export default function (name: string, booleanFalseEnding?: string) {
+  if (name.length == 0) {
     throw new Error(`Flag name cannot be empty`)
   }
 
-  if (string.includes(' ')) {
-    throw new Error(`Flag \`${colors.cyan(string)}\` can not contain spaces`)
+  if (name.includes(' ')) {
+    throw new Error(`Flag \`${colors.cyan(name)}\` can not contain spaces`)
   }
 
-  if (string.startsWith('-')) {
-    throw new Error(`Flag \`${colors.cyan(string)}\` should not start with '-'`)
+  if (name.startsWith('-')) {
+    throw new Error(`Flag \`${colors.cyan(name)}\` should not start with '-'`)
   }
 
-  if (string.includes('=')) {
-    throw new Error(`Flag \`${colors.cyan(string)}\` should not contain '='`)
+  if (name.includes('=')) {
+    throw new Error(`Flag \`${colors.cyan(name)}\` should not contain '='`)
   }
 
-  if (booleanFalseEnding && string.endsWith(booleanFalseEnding)) {
+  if (booleanFalseEnding && name.endsWith(booleanFalseEnding)) {
     throw new Error(
       `Flag \`${colors.cyan(
-        string
+        name
       )}\` should not end with \`${booleanFalseEnding}\``
     )
   }

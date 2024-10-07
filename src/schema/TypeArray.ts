@@ -53,7 +53,7 @@ export class TypeArray<
   }
 }
 
-export module TypeArray {
+export namespace TypeArray {
   export type Config = TypeCore.Config &
     Partial<{
       minLength: number

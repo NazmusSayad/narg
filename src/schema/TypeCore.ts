@@ -1,6 +1,6 @@
 import { ResultErr, ResultOk } from './result'
 import { MergeObject, Prettify } from '../types/util.t'
-import verifyOptionName from '../helpers/validate-flag-name'
+import validateFlagName from '../helpers/validate-flag-name'
 import { ParsedResult, ExtractTypeOutput, InferAndUpdateConfig } from './type.t'
 
 export class TypeCore<TConfig extends TypeCore.Config> {
@@ -65,7 +65,7 @@ export class TypeCore<TConfig extends TypeCore.Config> {
     Prettify<MergeObject<TConfig, { aliases: TAliases }>>
   > {
     aliases.forEach((alias) => {
-      verifyOptionName('Alias', alias)
+      validateFlagName(alias)
     })
 
     this.config.aliases = [...new Set(aliases)].sort(
@@ -102,7 +102,7 @@ export class TypeCore<TConfig extends TypeCore.Config> {
   }
 }
 
-export module TypeCore {
+export namespace TypeCore {
   export type Config = Partial<{
     aliases: string[]
     description: string

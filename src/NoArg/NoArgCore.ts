@@ -106,6 +106,8 @@ export namespace NoArgCoreHelper {
 
     readonly booleanNotSyntaxEnding: string | false
     readonly enableHelpBoxBorder?: boolean
+
+    readonly doNotExitOnError?: boolean
   }
 
   export const defaultSystem = {

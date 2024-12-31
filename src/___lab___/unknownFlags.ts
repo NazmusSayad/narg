@@ -12,6 +12,7 @@ const app = NoArg.create('app', {
     allowDuplicateFlagForPrimitive: true,
     allowMultipleValuesForPrimitive: true,
     allowDuplicateFlagForList: true,
+    doNotExitOnError: true,
   },
 })
 
@@ -28,4 +29,6 @@ app.start([
   'value',
   'value',
   '--no',
+  '12432134',
+  '-h',
 ])

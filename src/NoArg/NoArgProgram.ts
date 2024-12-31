@@ -14,6 +14,7 @@ import colors from '../lib/colors'
 import { CellValue } from 'cli-table3'
 import { NoArgError } from './NoArgError'
 import { NoArgParser } from './NoArgParser'
+import ThrowExit from '../helpers/ThrowExit'
 import { getArrayLengthStr } from '../utils'
 import { NoArgCoreHelper } from './NoArgCore'
 import { TypeArray } from '../schema/TypeArray'
@@ -155,10 +156,25 @@ export class NoArgProgram<
 
       this.onActionCallback?.(...output)
     } catch (error) {
+      const canExit = !this.system.doNotExitOnError
+
+      if (error instanceof ThrowExit) {
+        if (error.message) {
+          console.error(colors.red('Error:'), `${error.message}`)
+        }
+
+        if (!canExit) return
+        return process.exit(error.code)
+      }
+
       if (error instanceof NoArgError) {
         console.error(colors.red('Error:'), `${error.message}`)
-        process.exit(1)
-      } else throw error
+
+        if (!canExit) return
+        return process.exit(1)
+      }
+
+      throw error
     }
   }
 

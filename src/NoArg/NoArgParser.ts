@@ -8,6 +8,7 @@ import { TypeBoolean } from '../schema/TypeBoolean'
 import { NoArgCore, NoArgCoreHelper } from './NoArgCore'
 import { TSchema, TSchemaPrimitive } from '../schema/type.t'
 import splitTrailingArgs from '../utils/split-trailing-args'
+import ThrowExit from '../helpers/ThrowExit'
 
 export class NoArgParser<
   TName extends string,
@@ -425,12 +426,12 @@ export class NoArgParser<
       optionsRecord.forEach(({ arg }) => {
         if (arg === '--help' || arg === '-h') {
           self.renderHelp()
-          return process.exit(0)
+          throw new ThrowExit(0)
         }
 
         if (arg === '--help-usage' || arg === '-hu') {
           self.renderUsage()
-          return process.exit(0)
+          throw new ThrowExit(0)
         }
       })
     }
